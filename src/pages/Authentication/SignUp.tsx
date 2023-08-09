@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
-import LogoDark from '../../images/logo/logo-dark.svg';
-import Logo from '../../images/logo/logo.svg';
+import LogoDark from '../../images/logo/logo.png';
+import Logo from '../../images/logo/logo.png';
 
 const SignUp = () => {
   return (
@@ -14,8 +14,7 @@ const SignUp = () => {
                 <img className="dark:hidden" src={LogoDark} alt="Logo" />
               </Link>
               <p className="2xl:px-20">
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit
-                suspendisse.
+                Sign Up to Vecmocon Dashboard
               </p>
 
               <span className="mt-15 inline-block">
@@ -145,9 +144,9 @@ const SignUp = () => {
 
           <div className="w-full border-stroke dark:border-strokedark xl:w-1/2 xl:border-l-2">
             <div className="w-full p-4 sm:p-12.5 xl:p-17.5">
-              <span className="mb-1.5 block font-medium">Start for free</span>
+              <span className="mb-1.5 block font-medium">Real-Time Monitoring Tool</span>
               <h2 className="mb-9 text-2xl font-bold text-black dark:text-white sm:text-title-xl2">
-                Sign Up to TailAdmin
+                Sign Up to Vecmocon Dashboard
               </h2>
 
               <form>
