@@ -2,6 +2,8 @@ import { ApexOptions } from 'apexcharts';
 import React, { useState } from 'react';
 import ReactApexChart from 'react-apexcharts';
 
+console.log(localStorage.getItem('data'));
+const data = localStorage.getItem('data')/1000000000000000000;
 const options: ApexOptions = {
   legend: {
     show: false,
@@ -127,12 +129,12 @@ const ChartOne: React.FC = () => {
     series: [
       {
         name: 'Product One',
-        data: [23, 11, 22, 27, 13, 22, 37, 21, 44, 22, 30, 45],
+        data: [23, 10, 22, 27, 13, 22, 37, 21, 44, 22, 30, 45],
       },
 
       {
         name: 'Product Two',
-        data: [30, 25, 36, 30, 45, 35, 64, 52, 59, 36, 39, 51],
+        data: [30, data, 36, 30, 45, 35, 64, 52, 59, 36, 39, 51],
       },
     ],
   });

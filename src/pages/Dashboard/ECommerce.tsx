@@ -8,6 +8,7 @@ import ChartTwo from '../../components/ChartTwo.tsx';
 import ChatCard from '../../components/ChatCard.tsx';
 import MapOne from '../../components/MapOne.tsx';
 import TableOne from '../../components/TableOne.tsx';
+//import Maps from '../../components/Maps.tsx';
 
 const ECommerce = () => {
   return (
