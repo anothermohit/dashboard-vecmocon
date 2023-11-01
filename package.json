@@ -20,6 +20,7 @@
     "@windmill/react-ui": "^0.6.0",
     "angular": "^1.6.10",
     "apexcharts": "^3.41.0",
+    "aws-sdk": "^2.1485.0",
     "boostrap": "^2.0.0",
     "headlessui": "^0.0.0",
     "jsvectormap": "^1.5.3",

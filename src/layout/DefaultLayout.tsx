@@ -2,12 +2,14 @@ import { useState } from 'react';
 import Header from '../components/Header';
 import Sidebar from '../components/Sidebar';
 import { Outlet } from 'react-router-dom';
+import AwsData from '../aws.data.jsx';
 
 const DefaultLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
     <div className="dark:bg-boxdark-2 dark:text-bodydark">
+      <AwsData />
       {/* <!-- ===== Page Wrapper Start ===== --> */}
       <div className="flex h-screen overflow-hidden">
         {/* <!-- ===== Sidebar Start ===== --> */}
