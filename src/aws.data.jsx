@@ -1,11 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import AWS from 'aws-sdk';
+import AWS from './aws.config.js';
 
-    AWS.config.update({
-        accessKeyId: 'AKIAQMM3NAM3YPKM6LXC',
-        secretAccessKey: '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',
-        region: 'us-east-1',
-    });
 
     var iotdata = new AWS.IotData({endpoint: 'a3fu7wrc8e12x7-ats.iot.us-east-1.amazonaws.com'});
     iotdata.getThingShadow({thingName: 'V15000860181063868530'}, function (err, data) {
