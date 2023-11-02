@@ -1,9 +1,7 @@
 import { ApexOptions } from 'apexcharts';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import ReactApexChart from 'react-apexcharts';
 
-console.log(localStorage.getItem('data'));
-const data = localStorage.getItem('data')/1000000000000000000;
 const options: ApexOptions = {
   legend: {
     show: false,
@@ -23,7 +21,6 @@ const options: ApexOptions = {
       left: 0,
       opacity: 0.1,
     },
-
     toolbar: {
       show: false,
     },
@@ -50,10 +47,6 @@ const options: ApexOptions = {
     width: [2, 2],
     curve: 'straight',
   },
-  // labels: {
-  //   show: false,
-  //   position: "top",
-  // },
   grid: {
     xaxis: {
       lines: {
@@ -131,13 +124,43 @@ const ChartOne: React.FC = () => {
         name: 'Product One',
         data: [23, 10, 22, 27, 13, 22, 37, 21, 44, 22, 30, 45],
       },
-
       {
         name: 'Product Two',
-        data: [30, data, 36, 30, 45, 35, 64, 52, 59, 36, 39, 51],
+        data: [30, 0, 36, 30, 45, 35, 64, 52, 59, 36, 39, 51],
       },
     ],
   });
+
+  useEffect(() => {
+    const updateData = () => {
+      setState((prevState) => {
+        const newProductOneData = [...prevState.series[0].data];
+        const newProductTwoData = [...prevState.series[1].data];
+        const newDataPoint = Math.floor(Math.random() * 100); // Generate new random data point
+
+        // Add the new data point and remove the oldest one
+        newProductOneData.push(newDataPoint);
+        newProductTwoData.shift();
+
+        return {
+          series: [
+            {
+              name: 'Product One',
+              data: newProductOneData,
+            },
+            {
+              name: 'Product Two',
+              data: newProductTwoData,
+            },
+          ],
+        };
+      });
+    };
+
+    const interval = setInterval(updateData, 10000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <div className="col-span-12 rounded-sm border border-stroke bg-white px-5 pt-7.5 pb-5 shadow-default dark:border-strokedark dark:bg-boxdark sm:px-7.5 xl:col-span-8">
@@ -163,14 +186,14 @@ const ChartOne: React.FC = () => {
           </div>
         </div>
         <div className="flex w-full max-w-45 justify-end">
-          <div className="inline-flex items-center rounded-md bg-whiter p-1.5 dark:bg-meta-4">
-            <button className="rounded bg-white py-1 px-3 text-xs font-medium text-black shadow-card hover:bg-white hover:shadow-card dark:bg-boxdark dark:text-white dark:hover:bg-boxdark">
+          <div className="inline-flex items-center rounded-md bg-whiter p-1.5 dark-bg-meta-4">
+            <button className="rounded bg-white py-1 px-3 text-xs font-medium text-black shadow-card hover-bg-white hover-shadow-card dark-bg-boxdark dark-text-white dark-hover-bg-boxdark">
               Day
             </button>
-            <button className="rounded py-1 px-3 text-xs font-medium text-black hover:bg-white hover:shadow-card dark:text-white dark:hover:bg-boxdark">
+            <button className="rounded py-1 px-3 text-xs font-medium text-black hover-bg-white hover-shadow-card dark-text-white dark-hover-bg-boxdark">
               Week
             </button>
-            <button className="rounded py-1 px-3 text-xs font-medium text-black hover:bg-white hover:shadow-card dark:text-white dark:hover:bg-boxdark">
+            <button className="rounded py-1 px-3 text-xs font-medium text-black hover-bg-white hover-shadow-card dark-text-white dark-hover-bg-boxdark">
               Month
             </button>
           </div>
@@ -179,12 +202,7 @@ const ChartOne: React.FC = () => {
 
       <div>
         <div id="chartOne" className="-ml-5">
-          <ReactApexChart
-            options={options}
-            series={state.series}
-            type="area"
-            height={350}
-          />
+          <ReactApexChart options={options} series={state.series} type="area" height={350} />
         </div>
       </div>
     </div>
