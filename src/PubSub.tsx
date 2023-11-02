@@ -9,16 +9,13 @@ import {AWS_REGION, AWS_COGNITO_IDENTITY_POOL_ID, AWS_IOT_ENDPOINT} from './sett
 import jquery from "jquery";
 import TableTwo from './components/TableTwo.tsx';
 import DeviceMap from './components/DeviceMap.jsx';
+import { useDispatch, useSelector } from 'react-redux';
+import { updateDeviceState } from './redux/actions/deviceActions'; // Import your action to update deviceState
 
 const $: JQueryStatic = jquery;
 function log(msg: string) {
     $('#message').append(`<pre>${msg}</pre>`);
 }
-
-const deviceLocations = [
-    { latitude: 37.7749, longitude: -122.4194, deviceId: 'Device1' },
-    // Add more device locations as needed
-  ];
 
 /**
  * AWSCognitoCredentialOptions. The credentials options used to create AWSCongnitoCredentialProvider.
@@ -121,11 +118,10 @@ async function connect_websocket(provider: auth.CredentialsProvider) {
 
 }
 
-
-
-
 function Mqtt311(arg) {
-    const [deviceState, setDeviceState] = useState({}); // Initialize with an empty object
+    const dispatch = useDispatch();
+    const deviceState = useSelector((state) => state.device.deviceState); // Use Redux to get deviceState
+    console.log(deviceState);
 
     console.log('subscribing', arg.deviceId);
     var connectionPromise : Promise<mqtt.MqttClientConnection>;
@@ -152,7 +148,7 @@ function Mqtt311(arg) {
                 let message = decoder.decode(new Uint8Array(payload));
                 // log(`Message received: topic=\"${topic}\" message=\"${message}\"`);
                 let state = JSON.parse(message).state;
-                setDeviceState(state); // Update the state with the new data
+                dispatch(updateDeviceState(state));
                 console.log(state);
             })
             .then((subscription) => {

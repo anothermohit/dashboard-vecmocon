@@ -11,17 +11,10 @@ const deviceLocations = [
 
 const Map = (props) => {
   const { dataItems } = props;
-  console.log(dataItems)
+  console.log(props)
   return (
     <>
-      <ul>
-        {dataItems.map((item, index) => (
-          <li key={index}>{item.someProperty /* Replace with the actual property you want to display */}</li>
-        ))}
-      </ul>
       <Breadcrumb pageName="Map" />
-
-      {/* Your map rendering code */}
       <DeviceMap deviceLocations={deviceLocations} />
     </>
   );
@@ -30,6 +23,8 @@ const Map = (props) => {
 const mapStateToProps = (state) => {
   return {
     dataItems: state.data.dataItems, // Make sure the path is correct
+    deviceState: state.device.deviceState, 
+
   };
 };
 
