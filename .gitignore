@@ -12,6 +12,10 @@ dist
 dist-ssr
 *.local
 
+# Keys
+src/settings.ts 
+src/aws.config.js
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

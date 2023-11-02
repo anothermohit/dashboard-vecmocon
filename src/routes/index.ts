@@ -33,7 +33,7 @@ const coreRoutes = [
   },
   {
     path: '/tables',
-    title: 'Tables',
+    title: 'Devices',
     component: Tables,
   },
   {
