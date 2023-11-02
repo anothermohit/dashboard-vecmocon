@@ -1,26 +1,36 @@
-import Breadcrumb from '../components/Breadcrumb';
 import React from 'react';
-import { useParams } from 'react-router-dom';
+import { connect } from 'react-redux';
+import Breadcrumb from '../components/Breadcrumb';
 import DeviceMap from '../components/DeviceMap.jsx';
 
 const deviceLocations = [
-    { latitude: 37.7749, longitude: -122.4194, deviceId: 'Device1' },
-    { latitude: 34.0522, longitude: -118.2437, deviceId: 'Device2' },
-    // Add more device locations as needed
-  ];
+  { latitude: 37.7749, longitude: -122.4194, deviceId: 'Device1' },
+  { latitude: 34.0522, longitude: -118.2437, deviceId: 'Device2' },
+  // Add more device locations as needed
+];
 
-const Map = () => {
+const Map = (props) => {
+  const { dataItems } = props;
+  console.log(dataItems)
   return (
     <>
+      <ul>
+        {dataItems.map((item, index) => (
+          <li key={index}>{item.someProperty /* Replace with the actual property you want to display */}</li>
+        ))}
+      </ul>
       <Breadcrumb pageName="Map" />
 
-      {/* <!-- ====== Map Section Start ====== --> */}
-      <div style={{maxWidth: '100%', height: 600}} className="w-full max-w-full rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
-        <DeviceMap deviceLocations={deviceLocations} />
-      </div>
-      {/* <!-- ====== Map Section End ====== --> */}
+      {/* Your map rendering code */}
+      <DeviceMap deviceLocations={deviceLocations} />
     </>
   );
 };
 
-export default Map;
+const mapStateToProps = (state) => {
+  return {
+    dataItems: state.data.dataItems, // Make sure the path is correct
+  };
+};
+
+export default connect(mapStateToProps)(Map);
