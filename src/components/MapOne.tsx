@@ -12,7 +12,7 @@ const MapOne = () => {
 
       regionStyle: {
         initial: {
-          fill: '#C8D0D8',
+          fill: '#3C50E0',
         },
         hover: {
           fillOpacity: 1,

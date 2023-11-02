@@ -127,7 +127,7 @@ const TableOne = () => {
         </div>
 
       {deviceRegistered.map((deviceId, index) => (
-        <div className="grid grid-cols-3 border-b border-stroke dark:border-strokedark sm:grid-cols-5">
+        <div key={index} className="grid grid-cols-3 border-b border-stroke dark:border-strokedark sm:grid-cols-5">
           <div className="flex items-center gap-3 p-2.5 xl:p-5">
             <p className="hidden text-black dark:text-white sm:block">{index}</p>
           </div>

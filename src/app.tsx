@@ -8,6 +8,7 @@ import SignUp from './pages/Authentication/SignUp';
 import Loader from './common/Loader';
 import routes from './routes';
 import DeviceDetails from './components/deviceDetails.jsx';
+import Map from './pages/Map.jsx';
 
 const DefaultLayout = lazy(() => import('./layout/DefaultLayout'));
 

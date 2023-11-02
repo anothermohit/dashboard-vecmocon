@@ -1,6 +1,7 @@
 import { lazy } from 'react';
 
 const Calendar = lazy(() => import('../pages/Calendar'));
+const Map = lazy(() => import('../pages/Map'));
 const Chart = lazy(() => import('../pages/Chart'));
 const FormElements = lazy(() => import('../pages/Form/FormElements'));
 const FormLayout = lazy(() => import('../pages/Form/FormLayout'));
@@ -15,6 +16,11 @@ const coreRoutes = [
     path: '/calendar',
     title: 'Calender',
     component: Calendar,
+  },
+  {
+    path: '/map',
+    title: 'Map',
+    component: Map,
   },
   {
     path: '/profile',
