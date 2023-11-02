@@ -55,9 +55,9 @@ const AwsData = () => {
 
   return (
     <div>
-      {/*<MQTT311 />*/}
+      <MQTT311 deviceId={'V15000860181063864489'}/>
     </div>
   );
 };
   
-  export default AwsData;
+export default AwsData;

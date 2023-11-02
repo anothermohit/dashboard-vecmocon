@@ -31,9 +31,9 @@ function App() {
       <Routes>
         <Route path="/auth/signin" element={<SignIn />} />
         <Route path="/auth/signup" element={<SignUp />} />
-        <Route path="/device/:deviceId" element={<DeviceDetails />} />
         <Route element={<DefaultLayout />}>
           <Route index element={<ECommerce />} />
+          <Route path="/device/:deviceId" element={<DeviceDetails />} />
           {routes.map((routes, index) => {
             const { path, component: Component } = routes;
             return (

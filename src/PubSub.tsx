@@ -2,16 +2,23 @@
  * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
  * SPDX-License-Identifier: Apache-2.0.
  */
-import { useEffect} from 'react';
+import { useEffect, useState } from 'react';
 import { mqtt, iot, CrtError, auth } from "aws-iot-device-sdk-v2";
 import AWS from "aws-sdk"
 import {AWS_REGION, AWS_COGNITO_IDENTITY_POOL_ID, AWS_IOT_ENDPOINT} from './settings';
 import jquery from "jquery";
+import TableTwo from './components/TableTwo.tsx';
+import DeviceMap from './components/DeviceMap.jsx';
+
 const $: JQueryStatic = jquery;
 function log(msg: string) {
     $('#message').append(`<pre>${msg}</pre>`);
 }
 
+const deviceLocations = [
+    { latitude: 37.7749, longitude: -122.4194, deviceId: 'Device1' },
+    // Add more device locations as needed
+  ];
 
 /**
  * AWSCognitoCredentialOptions. The credentials options used to create AWSCongnitoCredentialProvider.
@@ -87,28 +94,28 @@ async function connect_websocket(provider: auth.CredentialsProvider) {
             .with_keep_alive_seconds(30)
             .build();
 
-        log('Connecting websocket...');
+        // log('Connecting websocket...');
         const client = new mqtt.MqttClient();
-        log('new connection ...');
+        // log('new connection ...');
         const connection = client.new_connection(config);
-        log('setup callbacks ...');
+        // log('setup callbacks ...');
         connection.on('connect', (session_present) => {
             resolve(connection);
-            log("connection started:")
+            // log("connection started:")
         });
         connection.on('interrupt', (error: CrtError) => {
-            log(`Connection interrupted: error=${error}`);
+            // log(`Connection interrupted: error=${error}`);
         });
         connection.on('resume', (return_code: number, session_present: boolean) => {
-            log(`Resumed: rc: ${return_code} existing session: ${session_present}`)
+            // log(`Resumed: rc: ${return_code} existing session: ${session_present}`)
         });
         connection.on('disconnect', () => {
-            log('Disconnected');
+            // log('Disconnected');
         });
         connection.on('error', (error) => {
             reject(error);
         });
-        log('connect...');
+        // log('connect...');
         connection.connect();
     });
 
@@ -117,8 +124,10 @@ async function connect_websocket(provider: auth.CredentialsProvider) {
 
 
 
-function Mqtt311() {
+function Mqtt311(arg) {
+    const [deviceState, setDeviceState] = useState({}); // Initialize with an empty object
 
+    console.log('subscribing', arg.deviceId);
     var connectionPromise : Promise<mqtt.MqttClientConnection>;
     var sample_msg_count = 0;
     var user_msg_count = 0;
@@ -135,14 +144,19 @@ function Mqtt311() {
         connectionPromise = connect_websocket(provider);
 
         connectionPromise.then((connection) => {
-            log(`start subscribe`)
-            connection.subscribe('$aws/things/V15000860181063868530/shadow/update', mqtt.QoS.AtLeastOnce, (topic, payload) => {
+            // log(`start subscribe`)
+            console.log(connection, arg.deviceId);
+            console.log("$aws/things/" + arg.deviceId + "/shadow/update");
+            connection.subscribe("$aws/things/" + arg.deviceId + "/shadow/update", mqtt.QoS.AtLeastOnce, (topic, payload) => {
                 const decoder = new TextDecoder('utf8');
                 let message = decoder.decode(new Uint8Array(payload));
-                log(`Message received: topic=\"${topic}\" message=\"${message}\"`);
+                // log(`Message received: topic=\"${topic}\" message=\"${message}\"`);
+                let state = JSON.parse(message).state;
+                setDeviceState(state); // Update the state with the new data
+                console.log(state);
             })
             .then((subscription) => {
-                log(`start publish`)
+                // log(`start publish`)
                 connection.publish(test_topic, `THE SAMPLE PUBLISHES A MESSAGE EVERY MINUTE {${sample_msg_count}}`, subscription.qos);
                 /** The sample is used to demo long-running web service. The sample will keep publishing the message every minute.*/
                 setInterval( ()=>{
@@ -153,7 +167,7 @@ function Mqtt311() {
             });
         })
         .catch((reason) => {
-            log(`Error while connecting: ${reason}`);
+            // log(`Error while connecting: ${reason}`);
         });
     }
 
@@ -166,7 +180,7 @@ function Mqtt311() {
         const msg = `BUTTON CLICKED {${user_msg_count}}`;
         connectionPromise.then((connection) => {
             connection.publish(test_topic, msg, mqtt.QoS.AtLeastOnce).catch((reason) => {
-                log(`Error publishing: ${reason}`);
+                // log(`Error publishing: ${reason}`);
             });
         })
         user_msg_count++;
@@ -177,20 +191,16 @@ function Mqtt311() {
       await connectionPromise.then((connection) => {
         connection.disconnect()
         .catch((reason) => {
-            log(`Error publishing: ${reason}`);
+            // log(`Error publishing: ${reason}`);
         });
       });
     }
 
     return (
-        <>
-        <div>
-            <button onClick={() => PublishMessage()}>Publish A Message</button>
-        </div>
-        <div>
-            <button onClick={() => CloseConnection()}>Disconnect</button>
-        </div>
-        <div id="message">Mqtt311 Pub Sub Sample</div>
+        <> 
+            <TableTwo deviceState={deviceState} />
+            <DeviceMap deviceState={deviceState} />
+
         </>
     );
 }

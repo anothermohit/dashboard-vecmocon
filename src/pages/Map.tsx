@@ -15,7 +15,7 @@ const Map = () => {
       <Breadcrumb pageName="Map" />
 
       {/* <!-- ====== Map Section Start ====== --> */}
-      <div style={{maxWidth: '100%'}} className="w-full max-w-full rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
+      <div style={{maxWidth: '100%', height: 600}} className="w-full max-w-full rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
         <DeviceMap deviceLocations={deviceLocations} />
       </div>
       {/* <!-- ====== Map Section End ====== --> */}
