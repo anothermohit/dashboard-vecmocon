@@ -12,9 +12,10 @@ const AwsData = () => {
   useEffect(() => {
     // Create a DynamoDB instance
     const dynamodb = new AWS.DynamoDB.DocumentClient();
-
+    let params = {}
+/*
     // Define your query parameters
-    let params = {
+    params = {
       TableName: 'vim_realtime_data',
       ScanIndexForward: false,
       Limit: 10,
@@ -30,9 +31,10 @@ const AwsData = () => {
         console.error('Error querying DynamoDB table:', err);
       } else {
         console.log('Query result:', data);
-        dispatch(updateDataItems(data.Items)); // Update Redux store
+        //dispatch(updateDataItems(data.Items)); // Update Redux store
       }
     });
+*/
 
     params = {
       TableName: 'clientInfo',

@@ -3,9 +3,10 @@ import VehicleMarkerImage from './vehicle.webp';
 
 const GOOGLE_MAPS_API_KEY = 'AIzaSyANXtr2-kBxYf1O2_HyNDjn2PhKWMZLJIc';
 
-const DeviceMap = ({ deviceState }) => {
+const DeviceMap = ({ devices }) => {
   const [map, setMap] = useState(null);
-  const [deviceMarker, setDeviceMarker] = useState(null);
+  const [deviceMarkers, setDeviceMarkers] = useState({});
+  const [mapBounds, setMapBounds] = useState(null);
 
   useEffect(() => {
     const script = document.createElement('script');
@@ -40,46 +41,47 @@ const DeviceMap = ({ deviceState }) => {
   };
 
   useEffect(() => {
-    if (map && deviceState && deviceState.reported && deviceState.reported.gps) {
-      const deviceLocation = {
-        latitude: deviceState.reported.gps[1],
-        longitude: deviceState.reported.gps[2],
-        deviceId: deviceState.reported.deviceInfo[1],
-      };
+    if (map && devices) {
+      const bounds = new window.google.maps.LatLngBounds();
 
-      if (deviceLocation.latitude && deviceLocation.longitude) {
-        const deviceCenter = {
-          lat: Number(deviceLocation.latitude),
-          lng: Number(deviceLocation.longitude),
-        };
+      for (const deviceId in devices) {
+        if (devices.hasOwnProperty(deviceId) && devices[deviceId].reported.gps) {
+          const deviceLocation = devices[deviceId].reported.gps;
+          const lat = deviceLocation[1];
+          const lng = deviceLocation[2];
 
-        // Update the map center
-        map.setCenter(deviceCenter);
+          if (lat && lng) {
+            const deviceCenter = new window.google.maps.LatLng(Number(lat), Number(lng));
+            bounds.extend(deviceCenter);
 
-        // Add markers for device locations
-        addDeviceMarker(deviceCenter);
+            if (deviceMarkers[deviceId]) {
+              // If a marker already exists, update its position
+              deviceMarkers[deviceId].setPosition(deviceCenter);
+            } else {
+              // Create a new marker
+              const marker = new window.google.maps.Marker({
+                position: deviceCenter,
+                map,
+                title: deviceId,
+                icon: {
+                  url: VehicleMarkerImage, // Set the custom image URL
+                  scaledSize: new window.google.maps.Size(50, 50), // Adjust the size as needed
+                },
+              });
+              deviceMarkers[deviceId] = marker;
+            }
+          }
+        }
+      }
+
+      // Set the map's viewport to fit the bounds of all markers
+      if (bounds.getNorthEast().equals(bounds.getSouthWest())) {
+        map.setCenter(bounds.getNorthEast());
+      } else {
+        map.fitBounds(bounds);
       }
     }
-  }, [map, deviceState]);
-
-  const addDeviceMarker = (position) => {
-    if (deviceMarker) {
-      // If a marker already exists, update its position
-      deviceMarker.setPosition(position);
-    } else {
-      // Create a new marker
-      const marker = new window.google.maps.Marker({
-        position,
-        map,
-        title: 'Device Location',
-        icon: {
-            url: VehicleMarkerImage, // Set the custom image URL
-            scaledSize: new window.google.maps.Size(50, 50), // Adjust the size as needed
-          },
-      });
-      setDeviceMarker(marker);
-    }
-  };
+  }, [map, devices, deviceMarkers]);
 
   return <div id="map" style={{ width: '100%', height: '400px' }}></div>;
 };

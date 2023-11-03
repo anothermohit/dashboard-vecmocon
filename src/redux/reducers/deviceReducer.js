@@ -1,14 +1,18 @@
 // redux/reducers/deviceReducer.js
 const initialState = {
-    deviceState: {},
+    devices: {}, // Store device states by deviceId
   };
   
   const deviceReducer = (state = initialState, action) => {
     switch (action.type) {
       case 'UPDATE_DEVICE_STATE':
+        const { deviceId, deviceState } = action.payload;
         return {
           ...state,
-          deviceState: action.payload,
+          devices: {
+            ...state.devices,
+            [deviceId]: deviceState,
+          },
         };
       default:
         return state;

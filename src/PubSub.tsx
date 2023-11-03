@@ -148,7 +148,7 @@ function Mqtt311(arg) {
                 let message = decoder.decode(new Uint8Array(payload));
                 // log(`Message received: topic=\"${topic}\" message=\"${message}\"`);
                 let state = JSON.parse(message).state;
-                dispatch(updateDeviceState(state));
+                dispatch(updateDeviceState(arg.deviceId, state));
                 console.log(state);
             })
             .then((subscription) => {
@@ -194,9 +194,8 @@ function Mqtt311(arg) {
 
     return (
         <> 
-            <TableTwo deviceState={deviceState} />
-            <DeviceMap deviceState={deviceState} />
-
+            {/*<TableTwo deviceState={deviceState} />*/}
+            {/*<DeviceMap deviceState={deviceState} />*/}
         </>
     );
 }

@@ -1,7 +1,7 @@
 // redux/actions/deviceActions.js
-export const updateDeviceState = (deviceState) => {
+export const updateDeviceState = (deviceId, deviceState) => {
     return {
       type: 'UPDATE_DEVICE_STATE',
-      payload: deviceState,
+      payload: { deviceId, deviceState },
     };
   };
