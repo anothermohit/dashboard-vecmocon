@@ -121,9 +121,9 @@ async function connect_websocket(provider: auth.CredentialsProvider) {
 function Mqtt311(arg) {
     const dispatch = useDispatch();
     const deviceState = useSelector((state) => state.device.deviceState); // Use Redux to get deviceState
-    console.log(deviceState);
+    console.log(arg.dataItems);
 
-    console.log('subscribing', arg.deviceId);
+    //console.log('subscribing', arg.deviceId);
     var connectionPromise : Promise<mqtt.MqttClientConnection>;
     var sample_msg_count = 0;
     var user_msg_count = 0;
@@ -140,30 +140,23 @@ function Mqtt311(arg) {
         connectionPromise = connect_websocket(provider);
 
         connectionPromise.then((connection) => {
-            // log(`start subscribe`)
-            console.log(connection, arg.deviceId);
-            console.log("$aws/things/" + arg.deviceId + "/shadow/update");
-            connection.subscribe("$aws/things/" + arg.deviceId + "/shadow/update", mqtt.QoS.AtLeastOnce, (topic, payload) => {
-                const decoder = new TextDecoder('utf8');
-                let message = decoder.decode(new Uint8Array(payload));
-                // log(`Message received: topic=\"${topic}\" message=\"${message}\"`);
-                let state = JSON.parse(message).state;
-                dispatch(updateDeviceState(arg.deviceId, state));
-                console.log(state);
-            })
-            .then((subscription) => {
-                // log(`start publish`)
-                connection.publish(test_topic, `THE SAMPLE PUBLISHES A MESSAGE EVERY MINUTE {${sample_msg_count}}`, subscription.qos);
-                /** The sample is used to demo long-running web service. The sample will keep publishing the message every minute.*/
-                setInterval( ()=>{
-                    sample_msg_count++;
-                    const msg = `THE SAMPLE PUBLISHES A MESSAGE EVERY MINUTE {${sample_msg_count}}`;
-                    connection.publish(test_topic, msg, subscription.qos);
-                }, 60000);
-            });
+            arg.dataItems.forEach((client) => {
+                client.deviceRegistered.forEach((deviceId) => {
+                  const topic = `$aws/things/${deviceId}/shadow/update`;
+                  console.log(topic);
+                  connection.subscribe(topic, mqtt.QoS.AtLeastOnce, (topic, payload) => {
+                    const decoder = new TextDecoder('utf8');
+                    let message = decoder.decode(new Uint8Array(payload));
+                    // log(`Message received: topic="${topic}" message="${message}"`);
+                    let state = JSON.parse(message).state;
+                    dispatch(updateDeviceState(deviceId, state));
+                    console.log(state);
+                  });
+                });
+              });
         })
         .catch((reason) => {
-            // log(`Error while connecting: ${reason}`);
+            console.log(`Error while connecting: ${reason}`);
         });
     }
 
@@ -185,6 +178,7 @@ function Mqtt311(arg) {
     async function CloseConnection()
     {
       await connectionPromise.then((connection) => {
+        console.log(connection)
         connection.disconnect()
         .catch((reason) => {
             // log(`Error publishing: ${reason}`);

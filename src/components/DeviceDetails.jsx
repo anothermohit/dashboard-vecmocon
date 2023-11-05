@@ -1,7 +1,7 @@
 import React from 'react';
 import { useParams } from 'react-router-dom';
 import AwsData from '../aws.data.jsx';
-import MQTT311 from '../PubSub.tsx';
+import MQTT311 from '../Mqtt311.tsx';
 
 const DeviceDetails = () => {
   // Use the useParams hook to access route parameters

@@ -65,7 +65,7 @@ const DeviceMap = ({ devices }) => {
                 title: deviceId,
                 icon: {
                   url: VehicleMarkerImage, // Set the custom image URL
-                  scaledSize: new window.google.maps.Size(50, 50), // Adjust the size as needed
+                  scaledSize: new window.google.maps.Size(25, 25), // Adjust the size as needed
                 },
               });
               deviceMarkers[deviceId] = marker;

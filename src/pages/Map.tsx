@@ -3,7 +3,9 @@ import { connect } from 'react-redux';
 import Breadcrumb from '../components/Breadcrumb';
 import DeviceMap from '../components/DeviceMap.jsx';
 import AWSData from '../aws.data.jsx';
-import MQTT311 from '../PubSub.js';
+//import MqttConnection from '../MqttConnection.tsx';
+//import MqttSubscription from '../MqttSubscription.tsx';
+import MQTT311 from '../Mqtt311.js';
 
 const deviceLocations = [
   { latitude: 37.7749, longitude: -122.4194, deviceId: 'Device1' },
@@ -18,17 +20,9 @@ const Map = (props) => {
   return (
     <div>
       <Breadcrumb pageName="Map" />
-      <DeviceMap devices={devices} /> {/* Pass deviceState as a prop */}
-      <AWSData />
-      <div>
-        {dataItems.slice(0, 1).map((client, index) => (
-          <div key={index}>
-            {client.deviceRegistered.slice(0, 3).map((deviceId, i) => (
-              <MQTT311 key={i} deviceId={deviceId} />
-            ))}
-          </div>
-        ))}
-      </div>
+      <AWSData /> {/* clientInfo as dataItems */}
+      <MQTT311 deviceId={'V14000860057065002353'} dataItems={dataItems} /> {/* real-time state of every device in devices */}
+      <DeviceMap devices={devices} /> {/* passing real-time state of all devices */}
     </div>
   );
 };
