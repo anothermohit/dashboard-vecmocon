@@ -138,8 +138,10 @@ function Mqtt311(arg) {
         await provider.refreshCredentialAsync();
 
         connectionPromise = connect_websocket(provider);
+        console.log(connectionPromise)
 
         connectionPromise.then((connection) => {
+            console.log(connection, arg.dataItems)
             arg.dataItems.forEach((client) => {
                 client.deviceRegistered.forEach((deviceId) => {
                   const topic = `$aws/things/${deviceId}/shadow/update`;
@@ -152,8 +154,9 @@ function Mqtt311(arg) {
                     dispatch(updateDeviceState(deviceId, state));
                     console.log(state);
                   });
-                });
+                })
               });
+              console.log(connection)
         })
         .catch((reason) => {
             console.log(`Error while connecting: ${reason}`);

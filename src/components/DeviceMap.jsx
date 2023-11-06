@@ -35,10 +35,15 @@ const DeviceMap = ({ devices }) => {
           stylers: [{ hue: '#1B2434' }, { saturation: -100 }],
         },
       ],
+      zoomControl: true, // Add zoom controls
+      zoomControlOptions: {
+        position: window.google.maps.ControlPosition.RIGHT_BOTTOM, // Adjust the position as needed
+      },
     });
-
+  
     setMap(mapInstance);
   };
+  
 
   useEffect(() => {
     if (map && devices) {

@@ -21,7 +21,7 @@ const Map = (props) => {
     <div>
       <Breadcrumb pageName="Map" />
       <AWSData /> {/* clientInfo as dataItems */}
-      <MQTT311 deviceId={'V14000860057065002353'} dataItems={dataItems} /> {/* real-time state of every device in devices */}
+      {dataItems.length ? <MQTT311 deviceId={'V14000860057065002353'} dataItems={dataItems} /> : null} {/* real-time state of every device in devices */}
       <DeviceMap devices={devices} /> {/* passing real-time state of all devices */}
     </div>
   );
