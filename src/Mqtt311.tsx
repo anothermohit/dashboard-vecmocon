@@ -10,7 +10,9 @@ import jquery from "jquery";
 import TableTwo from './components/TableTwo.tsx';
 import DeviceMap from './components/DeviceMap.jsx';
 import { useDispatch, useSelector } from 'react-redux';
-import { updateDeviceState } from './redux/actions/deviceActions'; // Import your action to update deviceState
+import { updateDeviceState } from './redux/actions/deviceActions'; // Import your action to update devices
+import { updateSeriesShadow } from './redux/actions/seriesActions'; // Import your action to update device shadow
+import extractData from './js/extractData';
 
 const $: JQueryStatic = jquery;
 function log(msg: string) {
@@ -120,8 +122,8 @@ async function connect_websocket(provider: auth.CredentialsProvider) {
 
 function Mqtt311(arg) {
     const dispatch = useDispatch();
-    const deviceState = useSelector((state) => state.device.deviceState); // Use Redux to get deviceState
-    console.log(arg.dataItems);
+    let seriesData = useSelector((state) => state.series.seriesData); // Use Redux to get state
+    console.log(seriesData);
 
     //console.log('subscribing', arg.deviceId);
     var connectionPromise : Promise<mqtt.MqttClientConnection>;
@@ -136,27 +138,47 @@ function Mqtt311(arg) {
                 Region: AWS_REGION});
         /** Make sure the credential provider fetched before setup the connection */
         await provider.refreshCredentialAsync();
+        console.log(seriesData)
 
         connectionPromise = connect_websocket(provider);
         console.log(connectionPromise)
 
         connectionPromise.then((connection) => {
-            console.log(connection, arg.dataItems)
-            arg.dataItems.forEach((client) => {
-                client.deviceRegistered.forEach((deviceId) => {
-                  const topic = `$aws/things/${deviceId}/shadow/update`;
-                  console.log(topic);
-                  connection.subscribe(topic, mqtt.QoS.AtLeastOnce, (topic, payload) => {
-                    const decoder = new TextDecoder('utf8');
-                    let message = decoder.decode(new Uint8Array(payload));
-                    // log(`Message received: topic="${topic}" message="${message}"`);
-                    let state = JSON.parse(message).state;
-                    dispatch(updateDeviceState(deviceId, state));
-                    console.log(state);
+            console.log(connection, arg.dataItems);
+
+            if (arg.deviceId) {
+                const topic = `$aws/things/${arg.deviceId}/shadow/update`;
+                console.log(topic);
+                connection.subscribe(topic, mqtt.QoS.AtLeastOnce, (topic, payload) => {
+                const decoder = new TextDecoder('utf8');
+                let message = decoder.decode(new Uint8Array(payload));
+                // log(`Message received: topic="${topic}" message="${message}"`);
+                let state = JSON.parse(message).state;
+                let newData = extractData(state.reported);
+                newData.timestamp = Date.now();
+                dispatch(updateSeriesShadow(newData));
+                console.log('MQTT Data', arg.deviceId, state, newData);
+                }); 
+            } else if (arg.dataItems) {
+                arg.dataItems.forEach((client) => {
+                    client.deviceRegistered.forEach((deviceId) => {
+                      const topic = `$aws/things/${deviceId}/shadow/update`;
+                      console.log(topic);
+                      connection.subscribe(topic, mqtt.QoS.AtLeastOnce, (topic, payload) => {
+                        const decoder = new TextDecoder('utf8');
+                        let message = decoder.decode(new Uint8Array(payload));
+                        // log(`Message received: topic="${topic}" message="${message}"`);
+                        let state = JSON.parse(message).state;
+                        dispatch(updateDeviceState(deviceId, state));
+                        console.log('MQTT Data', deviceId, state);
+                    });
+                    })
                   });
-                })
-              });
-              console.log(connection)
+            } else {
+                console.log(arg);
+            }
+
+            console.log(connection)
         })
         .catch((reason) => {
             console.log(`Error while connecting: ${reason}`);

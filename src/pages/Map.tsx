@@ -18,10 +18,9 @@ const Map = (props) => {
   console.log(dataItems, devices);
 
   return (
-    <div>
-      <Breadcrumb pageName="Map" />
+    <div style={{paddingTop: 20, paddingBottom: 20}}>
       <AWSData /> {/* clientInfo as dataItems */}
-      {dataItems.length ? <MQTT311 deviceId={'V14000860057065002353'} dataItems={dataItems} /> : null} {/* real-time state of every device in devices */}
+      {dataItems.length ? <MQTT311 dataItems={dataItems} /> : null} {/* real-time state of every device in devices */}
       <DeviceMap devices={devices} /> {/* passing real-time state of all devices */}
     </div>
   );

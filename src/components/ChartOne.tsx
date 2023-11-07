@@ -24,6 +24,19 @@ const options: ApexOptions = {
     toolbar: {
       show: false,
     },
+    xaxis: {
+      type: 'datetime',
+      categories: [], // Initialize with an empty array
+      axisBorder: {
+        show: false,
+      },
+      axisTicks: {
+        show: false,
+      },
+      labels: {
+        datetimeUTC: true
+      }
+    },
   },
   responsive: [
     {
@@ -49,8 +62,13 @@ const options: ApexOptions = {
   },
   grid: {
     xaxis: {
-      lines: {
-        show: true,
+      type: 'datetime',
+      categories: [], // Initialize with an empty array
+      axisBorder: {
+        show: false,
+      },
+      axisTicks: {
+        show: false,
       },
     },
     yaxis: {
@@ -77,21 +95,8 @@ const options: ApexOptions = {
     },
   },
   xaxis: {
-    type: 'category',
-    categories: [
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dec',
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'May',
-      'Jun',
-      'Jul',
-      'Aug',
-    ],
+    type: 'datetime',
+    categories: [], // Initialize with an empty array
     axisBorder: {
       show: false,
     },
@@ -110,103 +115,96 @@ const options: ApexOptions = {
   },
 };
 
-interface ChartOneState {
-  series: {
-    name: string;
-    data: number[];
+interface ChartOneProps {
+  initialData: {
+    soc: number;
+    voltage: number;
+    current: number;
+    timestamp: number;
   }[];
 }
 
-const ChartOne: React.FC = () => {
-  const [state, setState] = useState<ChartOneState>({
+const ChartOne: React.FC<ChartOneProps> = ({ initialData }) => {
+  const formatDate = (timestamp) => {
+    const date = new Date(timestamp);
+    const ISTOptions = { timeZone: 'Asia/Kolkata', timeZoneName: 'short' };
+    return date.toLocaleString(undefined, ISTOptions);
+  };
+
+  let chartData = {
     series: [
       {
-        name: 'Product One',
-        data: [23, 10, 22, 27, 13, 22, 37, 21, 44, 22, 30, 45],
+        name: 'SOC',
+        data: initialData.map((dataPoint) => [dataPoint.timestamp, dataPoint.soc]),
       },
       {
-        name: 'Product Two',
-        data: [30, 0, 36, 30, 45, 35, 64, 52, 59, 36, 39, 51],
+        name: 'Voltage',
+        data: initialData.map((dataPoint) => [dataPoint.timestamp, dataPoint.voltage]),
+      },
+      {
+        name: 'Current',
+        data: initialData.map((dataPoint) => [dataPoint.timestamp, dataPoint.current]),
       },
     ],
-  });
+  }
+ // options.xaxis.categories = initialData.map((dataPoint) => formatDate(dataPoint.timestamp));
 
-  useEffect(() => {
-    const updateData = () => {
-      setState((prevState) => {
-        const newProductOneData = [...prevState.series[0].data];
-        const newProductTwoData = [...prevState.series[1].data];
-        const newDataPoint = Math.floor(Math.random() * 100); // Generate new random data point
-
-        // Add the new data point and remove the oldest one
-        newProductOneData.push(newDataPoint);
-        newProductTwoData.shift();
-
-        return {
-          series: [
-            {
-              name: 'Product One',
-              data: newProductOneData,
-            },
-            {
-              name: 'Product Two',
-              data: newProductTwoData,
-            },
-          ],
-        };
-      });
-    };
-
-    const interval = setInterval(updateData, 10000);
-
-    return () => clearInterval(interval);
-  }, []);
 
   return (
-    <div className="col-span-12 rounded-sm border border-stroke bg-white px-5 pt-7.5 pb-5 shadow-default dark:border-strokedark dark:bg-boxdark sm:px-7.5 xl:col-span-8">
-      <div className="flex flex-wrap items-start justify-between gap-3 sm:flex-nowrap">
-        <div className="flex w-full flex-wrap gap-3 sm:gap-5">
-          <div className="flex min-w-47.5">
-            <span className="mt-1 mr-2 flex h-4 w-full max-w-4 items-center justify-center rounded-full border border-primary">
-              <span className="block h-2.5 w-full max-w-2.5 rounded-full bg-primary"></span>
-            </span>
-            <div className="w-full">
-              <p className="font-semibold text-primary">Total Revenue</p>
-              <p className="text-sm font-medium">12.04.2022 - 12.05.2022</p>
-            </div>
-          </div>
-          <div className="flex min-w-47.5">
-            <span className="mt-1 mr-2 flex h-4 w-full max-w-4 items-center justify-center rounded-full border border-secondary">
-              <span className="block h-2.5 w-full max-w-2.5 rounded-full bg-secondary"></span>
-            </span>
-            <div className="w-full">
-              <p className="font-semibold text-secondary">Total Sales</p>
-              <p className="text-sm font-medium">12.04.2022 - 12.05.2022</p>
-            </div>
-          </div>
-        </div>
-        <div className="flex w-full max-w-45 justify-end">
-          <div className="inline-flex items-center rounded-md bg-whiter p-1.5 dark-bg-meta-4">
-            <button className="rounded bg-white py-1 px-3 text-xs font-medium text-black shadow-card hover-bg-white hover-shadow-card dark-bg-boxdark dark-text-white dark-hover-bg-boxdark">
-              Day
-            </button>
-            <button className="rounded py-1 px-3 text-xs font-medium text-black hover-bg-white hover-shadow-card dark-text-white dark-hover-bg-boxdark">
-              Week
-            </button>
-            <button className="rounded py-1 px-3 text-xs font-medium text-black hover-bg-white hover-shadow-card dark-text-white dark-hover-bg-boxdark">
-              Month
-            </button>
-          </div>
+<div className="col-span-12 rounded-sm border border-stroke bg-white p-7.5 shadow-default dark:border-strokedark dark-bg-boxdark xl-col-span-4">
+  <div className="flex flex-wrap items-start justify-between gap-3 sm:flex-nowrap">
+    <div className="flex w-full">
+      <div style={{width: 100}} className="flex">
+        <span className="mt-1 mr-2 flex h-4 w-full max-w-4 items-center justify-center rounded-full border border-primary">
+          <span className="block h-2.5 w-full max-w-2.5 rounded-full bg-primary"></span>
+        </span>
+        <div className="w-full">
+          <p className="font-semibold text-primary">SOC</p>
+          <p className="text-sm font-medium">%</p>
         </div>
       </div>
-
-      <div>
-        <div id="chartOne" className="-ml-5">
-          <ReactApexChart options={options} series={state.series} type="area" height={350} />
+      <div style={{width: 100}} className="flex">
+        <span className="mt-1 mr-2 flex h-4 w-full max-w-4 items-center justify-center rounded-full border border-secondary">
+          <span className="block h-2.5 w-full max-w-2.5 rounded-full bg-secondary"></span>
+        </span>
+        <div className="w-full">
+          <p className="font-semibold text-secondary">Voltage</p>
+          <p className="text-sm font-medium">V</p>
+        </div>
+      </div>
+      <div style={{width: 100}} className="flex">
+        <span className="mt-1 mr-2 flex h-4 w-full max-w-4 items-center justify-center rounded-full border border-tertiary">
+          <span className="bg-black block h-2.5 w-full max-w-2.5 rounded-full bg-tertiary"></span>
+        </span>
+        <div className="w-full">
+          <p className="font-semibold text-tertiary">Current</p>
+          <p className="text-sm font-medium">A</p>
         </div>
       </div>
     </div>
+    <div className="flex w-full max-w-45 justify-end">
+      <div className="inline-flex items-center rounded-md bg-whiter p-1.5 dark-bg-meta-4" style={{ overflow: 'hidden' }}>
+        <button className="rounded bg-white py-1 px-3 text-xs font-medium text-black shadow-card hover-bg-white hover-shadow-card dark-bg-boxdark dark-text-white dark-hover-bg-boxdark">
+          Day
+        </button>
+        <button className="rounded py-1 px-3 text-xs font-medium text-black hover-bg-white hover-shadow-card dark-text-white dark-hover-bg-boxdark">
+          Week
+        </button>
+        <button className="rounded py-1 px-3 text-xs font-medium text-black hover-bg-white hover-shadow-card dark-text-white dark-hover-bg-boxdark">
+          Month
+        </button>
+      </div>
+    </div>
+  </div>
+  <div>
+    <div id="chartOne" className="-ml-5">
+      <ReactApexChart options={options} series={chartData.series} type="area" height={350} />
+    </div>
+  </div>
+</div>
+
   );
 };
+
 
 export default ChartOne;

@@ -1,26 +1,31 @@
-// AwsData.js
+// DeviceData.js
 
 import React, { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { updateDataItems } from './redux/actions/dataActions';
+import { updateSeriesData } from './redux/actions/seriesActions';
 import AWS from './aws.config.js';
+import extractData from './js/extractData';
 
 var iotdata = new AWS.IotData({endpoint: 'a3fu7wrc8e12x7-ats.iot.us-east-1.amazonaws.com'});
-iotdata.getThingShadow({thingName: 'V15000860181063868530'}, function (err, data) {
-  if (err) console.log(err, err.stack); // an error occurred
-  else     console.log(data);           // successful response
-});
 
-
-const AwsData = () => {
+const DeviceData = ({deviceId}) => {
+  //console.log(deviceId)
+  // shadow
+  /*
+  iotdata.getThingShadow({thingName: deviceId}, function (err, data) {
+    if (err) console.log(err, err.stack); // an error occurred
+    else     console.log(data);           // successful response
+  });
+  */
+  
   const dispatch = useDispatch();
-  const dataItems = useSelector((state) => state.data.dataItems);
+  //const seriesData = useSelector((state) => state.series.seriesData);
 
   useEffect(() => {
     // Create a DynamoDB instance
     const dynamodb = new AWS.DynamoDB.DocumentClient();
     let params = {}
-/*
+
     // Define your query parameters
     params = {
       TableName: 'vim_realtime_data',
@@ -28,21 +33,22 @@ const AwsData = () => {
       Limit: 10,
       KeyConditionExpression: 'device_id = :value', // Replace with your partition key name
       ExpressionAttributeValues: {
-        ':value': 'V14000860057065002148', // Replace with the partition key value you want to query
+        ':value': deviceId, // Replace with the partition key value you want to query
       },
     };
 
     // Scan DynamoDB table
-    dynamodb.query(params, (err, data) => {
+    dynamodb.query(params, (err, pastData) => {
       if (err) {
         console.error('Error querying DynamoDB table:', err);
       } else {
-        console.log('Query result:', data);
-        //dispatch(updateDataItems(data.Items)); // Update Redux store
+        const series = pastData.Items.map(extractData);
+        console.log('Query result:', pastData, series);
+        dispatch(updateSeriesData(series)); // Update Redux store
       }
     });
-*/
 
+/*
     params = {
       TableName: 'clientInfo',
       Limit: 100
@@ -54,15 +60,16 @@ const AwsData = () => {
         console.error('Error scanning DynamoDB table:', err);
       } else {
         console.log('Scan result:', data);
-        dispatch(updateDataItems(data.Items)); // Update Redux store
+        dispatch(updateSeriesData(data.Items)); // Update Redux store
       }
     });
-  }, [dispatch]);
+    */
 
+  }, [dispatch]);
   return (
     <div>
     </div>
   );
 };
 
-export default AwsData;
+export default DeviceData;
