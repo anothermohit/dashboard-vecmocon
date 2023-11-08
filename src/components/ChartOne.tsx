@@ -87,7 +87,7 @@ const options: ApexOptions = {
     strokeWidth: 3,
     strokeOpacity: 0.9,
     strokeDashArray: 0,
-    fillOpacity: 1,
+    fillOpacity: 0,
     discrete: [],
     hover: {
       size: undefined,

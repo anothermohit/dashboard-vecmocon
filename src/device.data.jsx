@@ -30,7 +30,7 @@ const DeviceData = ({deviceId}) => {
     params = {
       TableName: 'vim_realtime_data',
       ScanIndexForward: false,
-      Limit: 10,
+      Limit: 3,
       KeyConditionExpression: 'device_id = :value', // Replace with your partition key name
       ExpressionAttributeValues: {
         ':value': deviceId, // Replace with the partition key value you want to query

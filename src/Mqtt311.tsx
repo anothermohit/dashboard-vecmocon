@@ -125,7 +125,6 @@ function Mqtt311(arg) {
     let seriesData = useSelector((state) => state.series.seriesData); // Use Redux to get state
     console.log(seriesData);
 
-    //console.log('subscribing', arg.deviceId);
     var connectionPromise : Promise<mqtt.MqttClientConnection>;
     var sample_msg_count = 0;
     var user_msg_count = 0;
@@ -138,13 +137,10 @@ function Mqtt311(arg) {
                 Region: AWS_REGION});
         /** Make sure the credential provider fetched before setup the connection */
         await provider.refreshCredentialAsync();
-        console.log(seriesData)
 
         connectionPromise = connect_websocket(provider);
-        console.log(connectionPromise)
 
         connectionPromise.then((connection) => {
-            console.log(connection, arg.dataItems);
 
             if (arg.deviceId) {
                 const topic = `$aws/things/${arg.deviceId}/shadow/update`;
@@ -154,8 +150,10 @@ function Mqtt311(arg) {
                 let message = decoder.decode(new Uint8Array(payload));
                 // log(`Message received: topic="${topic}" message="${message}"`);
                 let state = JSON.parse(message).state;
+                console.log(state)
                 let newData = extractData(state.reported);
-                newData.timestamp = Date.now();
+                //newData.timestamp = Date.now()
+
                 dispatch(updateSeriesShadow(newData));
                 console.log('MQTT Data', arg.deviceId, state, newData);
                 }); 
@@ -163,7 +161,6 @@ function Mqtt311(arg) {
                 arg.dataItems.forEach((client) => {
                     client.deviceRegistered.forEach((deviceId) => {
                       const topic = `$aws/things/${deviceId}/shadow/update`;
-                      console.log(topic);
                       connection.subscribe(topic, mqtt.QoS.AtLeastOnce, (topic, payload) => {
                         const decoder = new TextDecoder('utf8');
                         let message = decoder.decode(new Uint8Array(payload));
@@ -203,7 +200,6 @@ function Mqtt311(arg) {
     async function CloseConnection()
     {
       await connectionPromise.then((connection) => {
-        console.log(connection)
         connection.disconnect()
         .catch((reason) => {
             // log(`Error publishing: ${reason}`);

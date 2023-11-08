@@ -22,27 +22,35 @@ const DeviceMap = ({ devices }) => {
   }, []);
 
   const initializeMap = () => {
-    const mapInstance = new window.google.maps.Map(document.getElementById('map'), {
-      center: { lat: 20.5937, lng: 78.9629 },
-      zoom: 10,
-      styles: [
-        {
-          featureType: 'all',
-          stylers: [{ hue: '#34576F' }, { saturation: 5 }],
+    if (window.google) {
+      const mapInstance = new window.google.maps.Map(document.getElementById('map'), {
+        zoom: 5,
+        styles: [
+          {
+            featureType: 'all',
+            stylers: [{ hue: '#34576F' }, { saturation: 5 }],
+          },
+          {
+            featureType: 'road',
+            stylers: [{ hue: '#1B2434' }, { saturation: -100 }],
+          },
+        ],
+        zoomControl: true,
+        zoomControlOptions: {
+          position: window.google.maps.ControlPosition.RIGHT_BOTTOM,
         },
-        {
-          featureType: 'road',
-          stylers: [{ hue: '#1B2434' }, { saturation: -100 }],
-        },
-      ],
-      zoomControl: true, // Add zoom controls
-      zoomControlOptions: {
-        position: window.google.maps.ControlPosition.RIGHT_BOTTOM, // Adjust the position as needed
-      },
-    });
+      });
   
-    setMap(mapInstance);
+      // Set the center to India
+      const indiaCenter = new window.google.maps.LatLng(20.5937, 78.9629);
+      mapInstance.setCenter(indiaCenter);
+  
+      setMap(mapInstance);
+    } else {
+      // Handle the case where the Google Maps API is not yet loaded
+    }
   };
+  
   
 
   useEffect(() => {

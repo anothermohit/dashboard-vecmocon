@@ -7,7 +7,8 @@ export default function extractData(item) {
       current: item.bms["batteryCurrentStack(A)"]
         ? item.bms["batteryCurrentStack(A)"][1]
         : null,
-      timestamp: item.timestamp,
+      cellVoltages: item.bms.cellVoltages,
+      timestamp: 1000*item.bms.tsValue,
     };
   }
   
