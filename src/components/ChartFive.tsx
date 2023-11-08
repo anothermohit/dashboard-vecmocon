@@ -160,10 +160,10 @@ const ChartFive: React.FC<ChartFiveProps> = ({ initialData }) => {
   };
 
   const chartData = {
-    series: initialData[0].cellVoltages.slice(1).map((_, index) => ({
+    series: initialData[0].cellVoltages ? initialData[0].cellVoltages.slice(1).map((_, index) => ({
       name: `Cell-${index + 1}`,
-      data: initialData.map((dataPoint) => [dataPoint.timestamp, dataPoint.cellVoltages[index + 1]]), // Skip the first element
-    })),
+      data: initialData.map((dataPoint) => [dataPoint.timestamp, dataPoint.cellVoltages ? dataPoint.cellVoltages[index + 1] : null]), // Skip the first element
+    })) : null,
   };  
 
   return (
@@ -176,7 +176,7 @@ const ChartFive: React.FC<ChartFiveProps> = ({ initialData }) => {
         </div>
       </div>
       <div className="flex flex-wrap items-start justify-between gap-3 sm:flex-nowrap">
-        {chartData.series.map((series, index) => (
+        {chartData.series ? chartData.series.map((series, index) => (
           <div style={{ width: 50 }} className="flex" key={index}>
             <span style={{color: options.colors[index]}} className={`mt-1 mr-2 flex h-4 w-full max-w-4 items-center justify-center rounded-full border border-primary`}>
               <span style={{background: options.colors[index]}} className="block h-2.5 w-full max-w-2.5 rounded-full bg-primary"></span>
@@ -186,7 +186,7 @@ const ChartFive: React.FC<ChartFiveProps> = ({ initialData }) => {
               {/*<p className="text-sm font-medium">V</p>*/}
             </div>
           </div>
-        ))}
+        )) : null}
       </div>
       <div>
         <div id="ChartFive" className="-ml-5">

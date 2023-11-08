@@ -12,6 +12,7 @@ import ChartThree from './ChartThree.tsx';
 import ChartTwo from './ChartTwo.tsx';
 import ChartFive from './ChartFive.tsx';
 import ChartSix from './ChartSix.tsx';
+import ChartSeven from './ChartSeven.tsx';
 //import ChatCard from './ChatCard.tsx';
 import MapOne from './MapOne.tsx';
 import DeviceData from '../device.data.jsx';
@@ -51,6 +52,7 @@ const DeviceDetails = ({series}) => {
         {series.seriesData.length ? <ChartOne initialData={series.seriesData}/>  : null}
         {series.seriesData.length ? <ChartFive initialData={series.seriesData || []}/>  : null}
         {series.seriesData.length ? <ChartSix initialData={series.seriesData || []}/>  : null}
+        {series.seriesData.length ? <ChartSeven initialData={series.seriesData || []}/>  : null}
         <ChartTwo />
         <ChartThree />
         <MapOne />

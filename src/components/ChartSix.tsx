@@ -140,12 +140,10 @@ const options: ApexOptions = {
   }
 };
 
-// ... Rest of the code remains the same
-
 interface ChartSixProps {
   initialData: {
     soc: number;
-    Temperature: number;
+    Temperature: number; // should have been voltage, rather nothing
     current: number;
     temperatures: number[];
     timestamp: number;
@@ -160,10 +158,10 @@ const ChartSix: React.FC<ChartSixProps> = ({ initialData }) => {
   };
 
   const chartData = {
-    series: initialData[0].temperatures.slice(1).map((_, index) => ({
+    series: initialData[0].temperatures ? initialData[0].temperatures.slice(1).map((_, index) => ({
       name: `NTC-${index + 1}`,
       data: initialData.map((dataPoint) => [dataPoint.timestamp, dataPoint.temperatures ? dataPoint.temperatures[index + 1]  : null]), // Skip the first element
-    })),
+    })) : null,
   };  
 
   return (
@@ -176,7 +174,7 @@ const ChartSix: React.FC<ChartSixProps> = ({ initialData }) => {
           </div>
       </div>
       <div className="flex flex-wrap items-start justify-between gap-3 sm:flex-nowrap">
-        {chartData.series.map((series, index) => (
+        {chartData.series ? chartData.series.map((series, index) => (
           <div style={{ width: 50 }} className="flex" key={index}>
             <span style={{color: options.colors[index]}} className={`mt-1 mr-2 flex h-4 w-full max-w-4 items-center justify-center rounded-full border border-primary`}>
               <span style={{background: options.colors[index]}} className="block h-2.5 w-full max-w-2.5 rounded-full bg-primary"></span>
@@ -186,7 +184,7 @@ const ChartSix: React.FC<ChartSixProps> = ({ initialData }) => {
               {/*<p className="text-sm font-medium">V</p>*/}
             </div>
           </div>
-        ))}
+        )) : null}
       </div>
       <div>
         <div id="ChartSix" className="-ml-5">

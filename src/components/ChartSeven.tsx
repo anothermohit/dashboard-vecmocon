@@ -8,7 +8,7 @@ const options: ApexOptions = {
     position: 'top',
     horizontalAlign: 'left',
   },
-  colors: ['#3C50E0', '#80CAEE', '#FF5733'],
+  colors: ['#3C50E0', '#80CAEE', '#FF5733', '#00BCD4'], // Add colors for the other two data series
   chart: {
     fontFamily: 'Satoshi, sans-serif',
     height: 335,
@@ -107,7 +107,7 @@ const options: ApexOptions = {
   yaxis: [
     {
       title: {
-        text: 'Voltage (V)',
+        text: 'Temperature',
         style: {
           fontSize: '0px',
         },
@@ -117,7 +117,7 @@ const options: ApexOptions = {
     },
     {
       title: {
-        text: 'Current (A)',
+        text: 'Voltage (V)',
         style: {
           fontSize: '0px',
         },
@@ -127,7 +127,7 @@ const options: ApexOptions = {
     },
     {
       title: {
-        text: 'SOC (%)',
+        text: 'Speed',
         style: {
           fontSize: '0px',
         },
@@ -135,19 +135,32 @@ const options: ApexOptions = {
       min: 0,
       max: 100,
     },
+    {
+      title: {
+        text: 'Distance',
+        style: {
+          fontSize: '0px',
+        },
+      },
+      min: 0, // Set the appropriate min and max values for the "distance" curve
+      max: 100,
+    }
   ],
 };
 
-interface ChartOneProps {
+interface ChartSevenProps {
   initialData: {
-    soc: number;
-    voltage: number;
-    current: number;
+    iot: {
+      temperature: number;
+      voltage: number;
+      speed: number;
+      distance: number;
+    }
     timestamp: number;
   }[];
 }
 
-const ChartOne: React.FC<ChartOneProps> = ({ initialData }) => {
+const ChartSeven: React.FC<ChartSevenProps> = ({ initialData }) => {
   const formatDate = (timestamp) => {
     const date = new Date(timestamp);
     const ISTOptions = { timeZone: 'Asia/Kolkata', timeZoneName: 'short' };
@@ -157,16 +170,20 @@ const ChartOne: React.FC<ChartOneProps> = ({ initialData }) => {
   let chartData = {
     series: [
       {
-        name: 'SOC',
-        data: initialData.map((dataPoint) => [dataPoint.timestamp, dataPoint.soc]),
+        name: 'Temperature',
+        data: initialData.map((dataPoint) => [dataPoint.timestamp, dataPoint.iot.temperature]),
       },
       {
         name: 'Voltage',
-        data: initialData.map((dataPoint) => [dataPoint.timestamp, dataPoint.voltage]),
+        data: initialData.map((dataPoint) => [dataPoint.timestamp, dataPoint.iot.voltage]),
       },
       {
-        name: 'Current',
-        data: initialData.map((dataPoint) => [dataPoint.timestamp, dataPoint.current]),
+        name: 'Speed',
+        data: initialData.map((dataPoint) => [dataPoint.timestamp, dataPoint.iot.speed]),
+      },
+      {
+        name: 'Distance',
+        data: initialData.map((dataPoint) => [dataPoint.timestamp, dataPoint.iot.distance]),
       },
     ],
   }
@@ -175,15 +192,22 @@ const ChartOne: React.FC<ChartOneProps> = ({ initialData }) => {
 
   return (
 <div className="col-span-12 rounded-sm border border-stroke bg-white p-7.5 shadow-default dark:border-strokedark dark-bg-boxdark xl-col-span-4">
+  <div className="mb-3 justify-between gap-4 sm:flex">
+      <div>
+        <h5 className="text-xl font-semibold text-black dark:text-white">
+          IOT DATA
+        </h5>
+      </div>
+  </div>
   <div className="flex flex-wrap items-start justify-between gap-3 sm:flex-nowrap">
     <div className="flex w-full">
-      <div style={{width: 100}} className="flex">
+      <div style={{width: 130}} className="flex">
         <span className="mt-1 mr-2 flex h-4 w-full max-w-4 items-center justify-center rounded-full border border-primary">
           <span className="block h-2.5 w-full max-w-2.5 rounded-full bg-primary"></span>
         </span>
         <div className="w-full">
-          <p className="font-semibold text-primary">SOC</p>
-          <p className="text-sm font-medium">%</p>
+          <p className="font-semibold text-primary">Temperature</p>
+          <p className="text-sm font-medium">(°C)</p>
         </div>
       </div>
       <div style={{width: 100}} className="flex">
@@ -192,7 +216,7 @@ const ChartOne: React.FC<ChartOneProps> = ({ initialData }) => {
         </span>
         <div className="w-full">
           <p className="font-semibold text-secondary">Voltage</p>
-          <p className="text-sm font-medium">V</p>
+          <p className="text-sm font-medium">(V)</p>
         </div>
       </div>
       <div style={{width: 100}} className="flex">
@@ -200,10 +224,19 @@ const ChartOne: React.FC<ChartOneProps> = ({ initialData }) => {
           <span style={{background: options.colors[2]}} className="bg-black block h-2.5 w-full max-w-2.5 rounded-full bg-tertiary"></span>
         </span>
         <div style={{color: options.colors[2]}} className="w-full">
-          <p className="font-semibold text-tertiary">Current</p>
-          <p className="text-sm font-medium">A</p>
+          <p className="font-semibold text-tertiary">Speed</p>
+          <p className="text-sm font-medium">(Km/hr)</p>
         </div>
       </div>
+      <div style={{width: 100}} className="flex">
+        <span className="mt-1 mr-2 flex h-4 w-full max-w-4 items-center justify-center rounded-full border border-tertiary">
+          <span style={{background: options.colors[3]}} className="bg-black block h-2.5 w-full max-w-2.5 rounded-full bg-tertiary"></span>
+        </span>
+        <div style={{color: options.colors[3]}} className="w-full">
+          <p className="font-semibold text-tertiary">Distance</p>
+          <p className="text-sm font-medium">(Km)</p>
+        </div>
+      </div>      
     </div>
     <div className="flex w-full max-w-45 justify-end">
       <div className="inline-flex items-center rounded-md bg-whiter p-1.5 dark-bg-meta-4" style={{ overflow: 'hidden' }}>
@@ -220,7 +253,7 @@ const ChartOne: React.FC<ChartOneProps> = ({ initialData }) => {
     </div>
   </div>
   <div>
-    <div id="chartOne" className="-ml-5">
+    <div id="ChartSeven" className="-ml-5">
       <ReactApexChart options={options} series={chartData.series} type="area" height={350} />
     </div>
   </div>
@@ -230,4 +263,4 @@ const ChartOne: React.FC<ChartOneProps> = ({ initialData }) => {
 };
 
 
-export default ChartOne;
+export default ChartSeven;
