@@ -11,6 +11,7 @@ import ChartOne from './ChartOne.tsx';
 import ChartThree from './ChartThree.tsx';
 import ChartTwo from './ChartTwo.tsx';
 import ChartFive from './ChartFive.tsx';
+import ChartSix from './ChartSix.tsx';
 //import ChatCard from './ChatCard.tsx';
 import MapOne from './MapOne.tsx';
 import DeviceData from '../device.data.jsx';
@@ -49,6 +50,7 @@ const DeviceDetails = ({series}) => {
       <div className="mt-4 grid grid-cols-12 gap-4 md:mt-6 md:gap-6 2xl:mt-7.5 2xl:gap-7.5">
         {series.seriesData.length ? <ChartOne initialData={series.seriesData}/>  : null}
         {series.seriesData.length ? <ChartFive initialData={series.seriesData || []}/>  : null}
+        {series.seriesData.length ? <ChartSix initialData={series.seriesData || []}/>  : null}
         <ChartTwo />
         <ChartThree />
         <MapOne />

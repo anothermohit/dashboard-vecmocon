@@ -142,17 +142,17 @@ const options: ApexOptions = {
 
 // ... Rest of the code remains the same
 
-interface ChartFiveProps {
+interface ChartSixProps {
   initialData: {
     soc: number;
-    voltage: number;
+    Temperature: number;
     current: number;
-    cellVoltages: number[];
+    temperatures: number[];
     timestamp: number;
   }[];
 }
 
-const ChartFive: React.FC<ChartFiveProps> = ({ initialData }) => {
+const ChartSix: React.FC<ChartSixProps> = ({ initialData }) => {
   const formatDate = (timestamp) => {
     const date = new Date(timestamp);
     const ISTOptions = { timeZone: 'Asia/Kolkata', timeZoneName: 'short' };
@@ -160,20 +160,20 @@ const ChartFive: React.FC<ChartFiveProps> = ({ initialData }) => {
   };
 
   const chartData = {
-    series: initialData[0].cellVoltages.slice(1).map((_, index) => ({
-      name: `Cell-${index + 1}`,
-      data: initialData.map((dataPoint) => [dataPoint.timestamp, dataPoint.cellVoltages[index + 1]]), // Skip the first element
+    series: initialData[0].temperatures.slice(1).map((_, index) => ({
+      name: `NTC-${index + 1}`,
+      data: initialData.map((dataPoint) => [dataPoint.timestamp, dataPoint.temperatures ? dataPoint.temperatures[index + 1]  : null]), // Skip the first element
     })),
   };  
 
   return (
     <div className="col-span-12 rounded-sm border border-stroke bg-white p-7.5 shadow-default dark:border-strokedark dark-bg-boxdark xl-col-span-4">
-      <div className="mb-3 justify-between gap-4 sm:flex">
-        <div>
-          <h5 className="text-xl font-semibold text-black dark:text-white">
-            Cell Voltages (V)
-          </h5>
-        </div>
+        <div className="mb-3 justify-between gap-4 sm:flex">
+          <div>
+            <h5 className="text-xl font-semibold text-black dark:text-white">
+              NTC Temperatures (°C)
+            </h5>
+          </div>
       </div>
       <div className="flex flex-wrap items-start justify-between gap-3 sm:flex-nowrap">
         {chartData.series.map((series, index) => (
@@ -189,7 +189,7 @@ const ChartFive: React.FC<ChartFiveProps> = ({ initialData }) => {
         ))}
       </div>
       <div>
-        <div id="ChartFive" className="-ml-5">
+        <div id="ChartSix" className="-ml-5">
           <ReactApexChart options={options} series={chartData.series} type="area" height={350} />
         </div>
       </div>
@@ -197,4 +197,4 @@ const ChartFive: React.FC<ChartFiveProps> = ({ initialData }) => {
   );
 };
 
-export default ChartFive;
+export default ChartSix;
