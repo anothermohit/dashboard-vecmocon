@@ -159,12 +159,20 @@ const ChartFive: React.FC<ChartFiveProps> = ({ initialData }) => {
     return date.toLocaleString(undefined, ISTOptions);
   };
 
+  let i = 0
+  for (i in initialData) {
+    if (initialData[i].cellVoltages) 
+    break;
+  }
+  console.log(initialData, i);
+
   const chartData = {
-    series: initialData[0].cellVoltages ? initialData[0].cellVoltages.slice(1).map((_, index) => ({
+    series: initialData[i].cellVoltages ? initialData[i].cellVoltages.slice(1).map((_, index) => ({
       name: `Cell-${index + 1}`,
       data: initialData.map((dataPoint) => [dataPoint.timestamp, dataPoint.cellVoltages ? dataPoint.cellVoltages[index + 1] : null]), // Skip the first element
-    })) : null,
+    })): null,
   };  
+  console.log(chartData.series, initialData)
 
   return (
     <div className="col-span-12 rounded-sm border border-stroke bg-white p-7.5 shadow-default dark:border-strokedark dark-bg-boxdark xl-col-span-4">

@@ -8,8 +8,8 @@ import extractData from './js/extractData';
 
 var iotdata = new AWS.IotData({endpoint: 'a3fu7wrc8e12x7-ats.iot.us-east-1.amazonaws.com'});
 
-const DeviceData = ({deviceId}) => {
-  //console.log(deviceId)
+const DeviceData = ({deviceId, time}) => { // time - Hour, Day, Week, Month
+  //console.log(deviceId) 
   // shadow
   /*
   iotdata.getThingShadow({thingName: deviceId}, function (err, data) {
@@ -26,15 +26,34 @@ const DeviceData = ({deviceId}) => {
     const dynamodb = new AWS.DynamoDB.DocumentClient();
     let params = {}
 
+    const now = new Date().getTime();
+    const oneHourAgo = now - 60 * 60 * 1000;
+    const oneDayAgo = now - 24 * 60 * 60 * 1000;
+    const oneWeekAgo = now - 7 * 24 * 60 * 60 * 1000; // 7 days * 24 hours * 60 minutes * 60 seconds * 1000 milliseconds
+    const oneMonthAgo = now - 30 * 24 * 60 * 60 * 1000; 
+
+    let startTime; 
+    if (time == 'Hour') startTime = oneHourAgo;
+    else if (time == 'Day') startTime = oneDayAgo; 
+    else if (time == 'Week') startTime = oneWeekAgo;
+    else if (time == 'Month') startTime = oneMonthAgo;
+    else startTime = null;
+
+      console.log(startTime, time)
     // Define your query parameters
     params = {
       TableName: 'vim_realtime_data',
       ScanIndexForward: false,
-      Limit: 3,
-      KeyConditionExpression: 'device_id = :value', // Replace with your partition key name
+      Limit: 50,
+      KeyConditionExpression: 'device_id = :value AND #timestamp >= :timestamp',
       ExpressionAttributeValues: {
-        ':value': deviceId, // Replace with the partition key value you want to query
+        ':value': deviceId,
+        ':timestamp': startTime,
       },
+      ExpressionAttributeNames: {
+        '#timestamp': 'timestamp', // 'timestamp' is a reserved word in DynamoDB, so use ExpressionAttributeNames to specify it
+      },
+      //ProjectionExpression: 'deviceInfo, #timestamp', // Specify the attributes you want to retrieve
     };
 
     // Scan DynamoDB table
@@ -65,7 +84,7 @@ const DeviceData = ({deviceId}) => {
     });
     */
 
-  }, [dispatch]);
+  }, [dispatch, time]);
   return (
     <div>
     </div>
