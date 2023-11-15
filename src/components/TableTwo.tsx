@@ -4,10 +4,15 @@ import ProductThree from '../images/product/product-03.png';
 import ProductFour from '../images/product/product-04.png';
 
 const TableTwo = (args) => { 
-  console.log(args);
+  let shadow = args.initialData || {};
+  console.log(args, shadow);
   let deviceId = '';
   let soc = '';
-
+  const date = new Date(shadow.timestamp * 1000); // Convert to milliseconds by multiplying by 1000
+  const formattedDate = date.toLocaleString(); // Format the date to a string
+  let a = new Date(shadow.timestamp);
+  console.log(a)
+  
   try {
     deviceId = args.deviceState.reported.deviceInfo[1];
     soc = args.deviceState.reported.bms.batterySocStack[1];
@@ -34,10 +39,10 @@ const TableTwo = (args) => {
           <p className="font-medium">Current</p>
         </div>
         <div className="col-span-1 flex items-center">
-          <p className="font-medium">Last Active</p>
+          <p className="font-medium">Voltage</p>
         </div>
         <div className="col-span-1 flex items-center">
-          <p className="font-medium">Misc</p>
+          <p className="font-medium">Last Active</p>
         </div>
       </div>
 
@@ -48,21 +53,21 @@ const TableTwo = (args) => {
               <img src={ProductOne} alt="Product" />
             </div>
             <p className="text-sm text-black dark:text-white">
-              {deviceId}
+              {args.deviceId}
             </p>
           </div>
         </div>
         <div className="col-span-2 hidden items-center sm:flex">
-          <p className="text-sm text-black dark:text-white">{soc}</p>
+          <p className="text-sm text-black dark:text-white">{shadow.soc} %</p>
         </div>
         <div className="col-span-1 flex items-center">
-          <p className="text-sm text-black dark:text-white">$269</p>
+          <p className="text-sm text-black dark:text-white">{shadow.current} A</p>
         </div>
         <div className="col-span-1 flex items-center">
-          <p className="text-sm text-black dark:text-white">22</p>
+          <p className="text-sm text-black dark:text-white">{shadow.voltage} V</p>
         </div>
         <div className="col-span-1 flex items-center">
-          <p className="text-sm text-meta-3">$45</p>
+          <p className="text-sm text-meta-3">{a.toLocaleString()}</p>
         </div>
       </div>
     </div>

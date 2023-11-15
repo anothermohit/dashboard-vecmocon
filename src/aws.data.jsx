@@ -3,9 +3,20 @@
 import React, { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { updateDataItems } from './redux/actions/dataActions';
-import AWS from './aws.config.js';
+import awsConfig from './aws.config.js';
 
-var iotdata = new AWS.IotData({endpoint: 'a3fu7wrc8e12x7-ats.iot.us-east-1.amazonaws.com'});
+import { DynamoDBDocument } from "@aws-sdk/lib-dynamodb";
+import { DynamoDB } from "@aws-sdk/client-dynamodb";
+import { IoTDataPlane } from "@aws-sdk/client-iot-data-plane";
+
+// JS SDK v3 does not support global configuration.
+// Codemod has attempted to pass values to each service client in this file.
+// You may need to update clients outside of this file, if they use global config.
+// JS SDK v3 does not support global configuration.
+// Codemod has attempted to pass values to each service client in this file.
+// You may need to update clients outside of this file, if they use global config.
+
+var iotdata = new IoTDataPlane(awsConfig);
 iotdata.getThingShadow({thingName: 'V15000860181063868530'}, function (err, data) {
   if (err) console.log(err, err.stack); // an error occurred
   else     console.log(data);           // successful response
@@ -18,7 +29,7 @@ const AwsData = () => {
 
   useEffect(() => {
     // Create a DynamoDB instance
-    const dynamodb = new AWS.DynamoDB.DocumentClient();
+    const dynamodb = DynamoDBDocument.from(new DynamoDB(awsConfig));
     let params = {}
 /*
     // Define your query parameters

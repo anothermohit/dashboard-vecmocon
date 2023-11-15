@@ -2,11 +2,17 @@
 
 import React, { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { updateSeriesData } from './redux/actions/seriesActions';
-import AWS from './aws.config.js';
+import { updateSeriesData, updateSeriesShadow } from './redux/actions/seriesActions';
 import extractData from './js/extractData';
+import awsConfig from './aws.config.js';
 
-var iotdata = new AWS.IotData({endpoint: 'a3fu7wrc8e12x7-ats.iot.us-east-1.amazonaws.com'});
+import { DynamoDBDocument } from "@aws-sdk/lib-dynamodb";
+import { DynamoDB } from "@aws-sdk/client-dynamodb";
+// JS SDK v3 does not support global configuration.
+// Codemod has attempted to pass values to each service client in this file.
+// You may need to update clients outside of this file, if they use global config.
+
+//var iotdata = new AWS.IotData({endpoint: 'a3fu7wrc8e12x7-ats.iot.us-east-1.amazonaws.com'});
 
 const DeviceData = ({deviceId, time}) => { // time - Hour, Day, Week, Month
   //console.log(deviceId) 
@@ -14,7 +20,7 @@ const DeviceData = ({deviceId, time}) => { // time - Hour, Day, Week, Month
   /*
   iotdata.getThingShadow({thingName: deviceId}, function (err, data) {
     if (err) console.log(err, err.stack); // an error occurred
-    else     console.log(data);           // successful response
+    else console.log(data); //dispatch(updateSeriesShadow(extractData(JSON.parse(data.payload).state.reported)));          // successful response
   });
   */
   
@@ -23,7 +29,7 @@ const DeviceData = ({deviceId, time}) => { // time - Hour, Day, Week, Month
 
   useEffect(() => {
     // Create a DynamoDB instance
-    const dynamodb = new AWS.DynamoDB.DocumentClient();
+    const dynamodb = DynamoDBDocument.from(new DynamoDB(awsConfig));
     let params = {}
 
     const now = new Date().getTime();
@@ -44,7 +50,7 @@ const DeviceData = ({deviceId, time}) => { // time - Hour, Day, Week, Month
     params = {
       TableName: 'vim_realtime_data',
       ScanIndexForward: false,
-      Limit: 50,
+      Limit: 10,
       KeyConditionExpression: 'device_id = :value AND #timestamp >= :timestamp',
       ExpressionAttributeValues: {
         ':value': deviceId,

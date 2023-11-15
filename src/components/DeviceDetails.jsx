@@ -12,6 +12,10 @@ import ChartFive from './ChartFive.tsx';
 import ChartSix from './ChartSix.tsx';
 import ChartSeven from './ChartSeven.tsx';
 import DeviceData from '../device.data.jsx';
+import TableOne from './TableOne.tsx';
+import TableTwo from './TableTwo.tsx';
+import TableThree from './TableThree.tsx';
+import MQTT311 from '../Mqtt311.tsx';
 
 function addShadowToData(seriesData, seriesShadow) {
   const timestamp = seriesShadow.timestamp;
@@ -31,6 +35,7 @@ const DeviceDetails = ({ series }) => {
   // Use the useParams hook to access route parameters
   const { deviceId } = useParams();
   if (series.seriesShadow) addShadowToData(series.seriesData, series.seriesShadow);
+  else series.seriesShadow = series.seriesData[0];
   console.log(series);
 
   const [selectedTimePeriod, setSelectedTimePeriod] = useState('Hour'); // Default to 'Hour'
@@ -46,6 +51,9 @@ const DeviceDetails = ({ series }) => {
 
   return (
     <div>
+      <br />
+      {series.seriesShadow ? <TableTwo deviceId={deviceId} initialData={series.seriesShadow}  /> : null}
+      <br />
       <div className="flex w-full justify-end">
         <div className="inline-flex items-center rounded-md bg-whiter p-1.5 dark-bg-meta-4" style={{ overflow: 'hidden' }}>
           {Object.keys(timePeriods).map((period) => (
@@ -60,6 +68,8 @@ const DeviceDetails = ({ series }) => {
         </div>
       </div>
       <DeviceData deviceId={deviceId} time={selectedTimePeriod} />
+      <MQTT311 deviceId={deviceId} />
+
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-6 xl:grid-cols-4 2xl:gap-7.5">
         <CardOne />
         <CardTwo />
