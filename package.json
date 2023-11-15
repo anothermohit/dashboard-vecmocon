@@ -27,6 +27,7 @@
     "@aws-sdk/types": "^3.433.0",
     "@aws-sdk/url-parser": "^3.374.0",
     "@windmill/react-ui": "^0.6.0",
+    "amazon-cognito-identity-js": "^6.3.7",
     "angular": "^1.6.10",
     "apexcharts": "^3.41.0",
     "aws-iot-device-sdk-v2": "^1.17.0",
