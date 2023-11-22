@@ -1,8 +1,173 @@
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import LogoDark from '../../images/logo/logo.png';
 import Logo from '../../images/logo/logo.png';
+import {AuthenticationDetails, CognitoUser, CognitoUserPool, CognitoUserAttribute} from 'amazon-cognito-identity-js';
+import { useNavigate } from 'react-router-dom';
 
 const SignIn = () => {
+  const navigate = useNavigate();
+
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [isPasswordChangeRequired, setIsPasswordChangeRequired] = useState(false);
+  
+  const handleLogin = async (e) => {
+    e.preventDefault();  // Prevent the default form submission behavior
+
+    const poolData = {
+        UserPoolId: 'us-east-1_vBr9qRmmd',
+        ClientId: '5dngq7m5g8qsi91ephbp1lovn0',
+    };
+    const userPool = new CognitoUserPool(poolData);
+
+    const authenticationData = {
+        Username: email,
+        Password: password,
+    };
+    const authenticationDetails = new AuthenticationDetails(authenticationData);
+
+    const userData = {
+        Username: email,
+        Pool: userPool,
+    };
+    const cognitoUser = new CognitoUser(userData);
+
+    cognitoUser.authenticateUser(authenticationDetails, {
+        onSuccess: (session) => {
+          console.log('Authentication successful:', session);
+
+        // Use the tokens as credentials for PubSub
+        const { idToken, accessToken } = session;
+        const credentials = {
+          accessKeyId: idToken.jwtToken,
+          secretAccessKey: accessToken.jwtToken,
+          sessionToken: session.getIdToken().getJwtToken(),
+        };
+
+        console.log(idToken, accessToken, credentials)
+          navigate('/');
+        },
+        onFailure: (err) => {
+            console.error('Authentication failed:', err);
+            // Check if the user needs to sign up
+          if (err.code === 'NotAuthorizedException') {
+            // User needs to sign up, proceed with registration
+            handleSignUp();
+          }
+        },
+        newPasswordRequired: (userAttributes, requiredAttributes) => {
+            console.log('New password required:', userAttributes, requiredAttributes);
+            setIsPasswordChangeRequired(true);
+        },
+    });
+  };
+
+  // Assuming you have the user pool data and attributeList set up as before
+  
+  const handleSignUp = async (e) => {
+  
+    const poolData = {
+      UserPoolId: 'us-east-1_vBr9qRmmd',
+      ClientId: '5dngq7m5g8qsi91ephbp1lovn0',
+    };
+    const userPool = new CognitoUserPool(poolData);
+  
+    const attributeList = [];
+    // Add any additional attributes you want to collect during registration
+    attributeList.push(new CognitoUserAttribute({ Name: 'email', Value: email }));
+  
+    userPool.signUp(email, password, attributeList, null, (err, result) => {
+      if (err) {
+        console.error('Sign up error:', err);
+        // Handle the sign-up failure, e.g., show an error message to the user
+        return;
+      }
+      const cognitoUser = result.user;
+      console.log('User signed up:', cognitoUser);
+  
+      // After successful signup, you'll receive a confirmation code via email
+      const confirmationCode = prompt('Please enter the confirmation code sent to your email:');
+  
+      // Confirm the user with the received confirmation code
+      cognitoUser.confirmRegistration(confirmationCode, true, (confirmErr, confirmResult) => {
+        if (confirmErr) {
+          console.error('Confirmation error:', confirmErr);
+          // Handle the confirmation failure, e.g., show an error message to the user
+          return;
+        }
+        console.log('User confirmed:', confirmResult);
+        // Optionally, you can trigger additional actions here after successful confirmation
+      });
+    });
+  };
+  
+  
+
+  const handleNewPasswordChange = async () => {
+      const poolData = {
+          UserPoolId: 'us-east-1_vBr9qRmmd',
+          ClientId: '5dngq7m5g8qsi91ephbp1lovn0',
+      };
+      const userPool = new CognitoUserPool(poolData);
+
+      console.log(userPool);
+      const userData = {
+          Username: email,
+          Pool: userPool,
+      };
+      
+      console.log(userData);
+      const authenticationData = {
+          Username: email,
+          Password: password,
+      };
+      console.log(authenticationData);
+      
+      const authenticationDetails = new AuthenticationDetails(authenticationData);
+      console.log(authenticationDetails);
+      const cognitoUser = new CognitoUser(userData);
+      console.log(cognitoUser);
+      cognitoUser.authenticateUser(authenticationDetails, {
+          onSuccess: (session) => {
+              console.log(session)
+              cognitoUser.completeNewPasswordChallenge(newPassword, {}, {
+                  onSuccess: (session) => {
+                      console.log('New password set successfully:', session);
+                      // After setting the new password, you can redirect the user to the main application
+                      onLogin();
+                  },
+                  onFailure: (err) => {
+                      console.error('Failed to set new password:', err);
+                      // Handle the failure scenario, e.g., show an error message to the user
+                  },
+              });
+          },
+          onFailure: (err) => {
+              console.error('Authentication failed:', err);
+              // Handle the failure scenario, e.g., show an error message to the user
+          },
+          newPasswordRequired: (userAttributes, requiredAttributes) => {
+              console.log(userAttributes, requiredAttributes);
+                      // Continue with setting the new password
+              cognitoUser.completeNewPasswordChallenge(newPassword, {}, {
+                  onSuccess: (session) => {
+                      console.log('New password set successfully:', session);
+                      // After setting the new password, you can redirect the user to the main application
+                      onLogin();
+                  },
+                  onFailure: (err) => {
+                      console.error('Failed to set new password:', err);
+                      // Handle the failure scenario, e.g., show an error message to the user
+                  },
+              });
+              // Additional logic may be needed here if additional attributes are required
+              // For example, you might prompt the user to enter additional information.
+          },
+      });
+  };
+
   return (
     <>
       <div className="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
@@ -150,13 +315,15 @@ const SignIn = () => {
                 Sign In to Vecmocon Dashboard
               </h2>
 
-              <form>
+              <form onSubmit={handleLogin}>
                 <div className="mb-4">
                   <label className="mb-2.5 block font-medium text-black dark:text-white">
                     Email
                   </label>
                   <div className="relative">
                     <input
+                      value={email} 
+                      onChange={(e) => setEmail(e.target.value)}
                       type="email"
                       placeholder="Enter your email"
                       className="w-full rounded-lg border border-stroke bg-transparent py-4 pl-6 pr-10 outline-none focus:border-primary focus-visible:shadow-none dark:border-form-strokedark dark:bg-form-input dark:focus:border-primary"
@@ -184,10 +351,12 @@ const SignIn = () => {
 
                 <div className="mb-6">
                   <label className="mb-2.5 block font-medium text-black dark:text-white">
-                    Re-type Password
+                    Password
                   </label>
                   <div className="relative">
                     <input
+                      value={password} 
+                      onChange={(e) => setPassword(e.target.value)}
                       type="password"
                       placeholder="6+ Characters, 1 Capital letter"
                       className="w-full rounded-lg border border-stroke bg-transparent py-4 pl-6 pr-10 outline-none focus:border-primary focus-visible:shadow-none dark:border-form-strokedark dark:bg-form-input dark:focus:border-primary"
@@ -218,57 +387,12 @@ const SignIn = () => {
                 </div>
 
                 <div className="mb-5">
-                  <input
+                  <button
                     type="submit"
-                    value="Sign In"
                     className="w-full cursor-pointer rounded-lg border border-primary bg-primary p-4 text-white transition hover:bg-opacity-90"
-                  />
-                </div>
-
-                <button className="flex w-full items-center justify-center gap-3.5 rounded-lg border border-stroke bg-gray p-4 hover:bg-opacity-50 dark:border-strokedark dark:bg-meta-4 dark:hover:bg-opacity-50">
-                  <span>
-                    <svg
-                      width="20"
-                      height="20"
-                      viewBox="0 0 20 20"
-                      fill="none"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <g clipPath="url(#clip0_191_13499)">
-                        <path
-                          d="M19.999 10.2217C20.0111 9.53428 19.9387 8.84788 19.7834 8.17737H10.2031V11.8884H15.8266C15.7201 12.5391 15.4804 13.162 15.1219 13.7195C14.7634 14.2771 14.2935 14.7578 13.7405 15.1328L13.7209 15.2571L16.7502 17.5568L16.96 17.5774C18.8873 15.8329 19.9986 13.2661 19.9986 10.2217"
-                          fill="#4285F4"
-                        />
-                        <path
-                          d="M10.2055 19.9999C12.9605 19.9999 15.2734 19.111 16.9629 17.5777L13.7429 15.1331C12.8813 15.7221 11.7248 16.1333 10.2055 16.1333C8.91513 16.1259 7.65991 15.7205 6.61791 14.9745C5.57592 14.2286 4.80007 13.1801 4.40044 11.9777L4.28085 11.9877L1.13101 14.3765L1.08984 14.4887C1.93817 16.1456 3.24007 17.5386 4.84997 18.5118C6.45987 19.4851 8.31429 20.0004 10.2059 19.9999"
-                          fill="#34A853"
-                        />
-                        <path
-                          d="M4.39899 11.9777C4.1758 11.3411 4.06063 10.673 4.05807 9.99996C4.06218 9.32799 4.1731 8.66075 4.38684 8.02225L4.38115 7.88968L1.19269 5.4624L1.0884 5.51101C0.372763 6.90343 0 8.4408 0 9.99987C0 11.5589 0.372763 13.0963 1.0884 14.4887L4.39899 11.9777Z"
-                          fill="#FBBC05"
-                        />
-                        <path
-                          d="M10.2059 3.86663C11.668 3.84438 13.0822 4.37803 14.1515 5.35558L17.0313 2.59996C15.1843 0.901848 12.7383 -0.0298855 10.2059 -3.6784e-05C8.31431 -0.000477834 6.4599 0.514732 4.85001 1.48798C3.24011 2.46124 1.9382 3.85416 1.08984 5.51101L4.38946 8.02225C4.79303 6.82005 5.57145 5.77231 6.61498 5.02675C7.65851 4.28118 8.9145 3.87541 10.2059 3.86663Z"
-                          fill="#EB4335"
-                        />
-                      </g>
-                      <defs>
-                        <clipPath id="clip0_191_13499">
-                          <rect width="20" height="20" fill="white" />
-                        </clipPath>
-                      </defs>
-                    </svg>
-                  </span>
-                  Sign in with Google
-                </button>
-
-                <div className="mt-6 text-center">
-                  <p>
-                    Don’t have any account?{' '}
-                    <Link to="/auth/signup" className="text-primary">
-                      Sign Up
-                    </Link>
-                  </p>
+                  >
+                    Sign In
+                  </button>
                 </div>
               </form>
             </div>

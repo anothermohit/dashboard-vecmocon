@@ -15,7 +15,6 @@ import { DynamoDB } from "@aws-sdk/client-dynamodb";
 //var iotdata = new AWS.IotData({endpoint: 'a3fu7wrc8e12x7-ats.iot.us-east-1.amazonaws.com'});
 
 const DeviceData = ({deviceId, time}) => { // time - Hour, Day, Week, Month
-  //console.log(deviceId) 
   // shadow
   /*
   iotdata.getThingShadow({thingName: deviceId}, function (err, data) {
@@ -37,7 +36,7 @@ const DeviceData = ({deviceId, time}) => { // time - Hour, Day, Week, Month
     const oneDayAgo = now - 24 * 60 * 60 * 1000;
     const oneWeekAgo = now - 7 * 24 * 60 * 60 * 1000; // 7 days * 24 hours * 60 minutes * 60 seconds * 1000 milliseconds
     const oneMonthAgo = now - 30 * 24 * 60 * 60 * 1000; 
-
+    
     let startTime; 
     if (time == 'Hour') startTime = oneHourAgo;
     else if (time == 'Day') startTime = oneDayAgo; 
@@ -45,7 +44,12 @@ const DeviceData = ({deviceId, time}) => { // time - Hour, Day, Week, Month
     else if (time == 'Month') startTime = oneMonthAgo;
     else startTime = null;
 
-      console.log(startTime, time)
+    let initialTime;
+    // Calculate startTime for 10 years ago
+    const tenYearsAgo = new Date();
+    tenYearsAgo.setFullYear(tenYearsAgo.getFullYear() - 10);
+    initialTime = Math.floor(tenYearsAgo.getTime() / 1000); // Convert to epoch format
+
     // Define your query parameters
     params = {
       TableName: 'vim_realtime_data',
@@ -68,10 +72,36 @@ const DeviceData = ({deviceId, time}) => { // time - Hour, Day, Week, Month
         console.error('Error querying DynamoDB table:', err);
       } else {
         const series = pastData.Items.map(extractData);
-        console.log('Query result:', pastData, series);
+        //console.log('Query result:', pastData, series);
         dispatch(updateSeriesData(series)); // Update Redux store
       }
     });
+
+ params = {
+  TableName: 'vim_realtime_data',
+  ScanIndexForward: false,
+  Limit: 1000,
+  KeyConditionExpression: 'device_id = :value AND #timestamp >= :timestamp',
+  ExpressionAttributeValues: {
+    ':value': deviceId,
+    ':timestamp': initialTime,
+  },
+  ExpressionAttributeNames: {
+    '#timestamp': 'timestamp', // 'timestamp' is a reserved word in DynamoDB, so use ExpressionAttributeNames to specify it
+  },
+  FilterExpression: 'attribute_exists(bms)',
+};
+
+// Query DynamoDB table to get the count
+dynamodb.query(params, (err, result) => {
+  if (err) {
+    console.error('Error querying DynamoDB table:', err);
+  } else {
+    console.log(result)
+    const bmsKeyExistsCount = result.Count;
+    console.log('Count of records where "bms" key exists:', bmsKeyExistsCount);
+  }
+});
 
 /*
     params = {

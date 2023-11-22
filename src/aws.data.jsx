@@ -16,11 +16,13 @@ import { IoTDataPlane } from "@aws-sdk/client-iot-data-plane";
 // Codemod has attempted to pass values to each service client in this file.
 // You may need to update clients outside of this file, if they use global config.
 
+/*
 var iotdata = new IoTDataPlane(awsConfig);
 iotdata.getThingShadow({thingName: 'V15000860181063868530'}, function (err, data) {
   if (err) console.log(err, err.stack); // an error occurred
   else     console.log(data);           // successful response
 });
+*/
 
 
 const AwsData = () => {
@@ -64,7 +66,7 @@ const AwsData = () => {
       if (err) {
         console.error('Error scanning DynamoDB table:', err);
       } else {
-        console.log('Scan result:', data);
+        //console.log('Scan result:', data);
         dispatch(updateDataItems(data.Items)); // Update Redux store
       }
     });

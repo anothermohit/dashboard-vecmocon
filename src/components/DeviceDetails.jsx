@@ -36,7 +36,6 @@ const DeviceDetails = ({ series }) => {
   const { deviceId } = useParams();
   if (series.seriesShadow) addShadowToData(series.seriesData, series.seriesShadow);
   else series.seriesShadow = series.seriesData[0];
-  console.log(series);
 
   const [selectedTimePeriod, setSelectedTimePeriod] = useState('Hour'); // Default to 'Hour'
 
@@ -47,11 +46,14 @@ const DeviceDetails = ({ series }) => {
     Month: 'Month',
   };
 
-  console.log(selectedTimePeriod);
 
   return (
     <div>
       <br />
+      <DeviceData deviceId={deviceId} time={selectedTimePeriod} />
+      <MQTT311 deviceId={deviceId} />
+
+{/*
       {series.seriesShadow ? <TableTwo deviceId={deviceId} initialData={series.seriesShadow}  /> : null}
       <br />
       <div className="flex w-full justify-end">
@@ -67,8 +69,6 @@ const DeviceDetails = ({ series }) => {
           ))}
         </div>
       </div>
-      <DeviceData deviceId={deviceId} time={selectedTimePeriod} />
-      <MQTT311 deviceId={deviceId} />
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-6 xl:grid-cols-4 2xl:gap-7.5">
         <CardOne />
@@ -85,6 +85,8 @@ const DeviceDetails = ({ series }) => {
         <ChartTwo />
         <ChartThree />
       </div>
+
+      */}
     </div>
   );
 };
