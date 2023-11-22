@@ -4,6 +4,8 @@ import LogoDark from '../../images/logo/logo.png';
 import Logo from '../../images/logo/logo.png';
 import {AuthenticationDetails, CognitoUser, CognitoUserPool, CognitoUserAttribute} from 'amazon-cognito-identity-js';
 import { useNavigate } from 'react-router-dom';
+import { loginSuccess } from '../../redux/actions/authActions.js'; 
+import { useDispatch } from 'react-redux';
 
 const SignIn = () => {
   const navigate = useNavigate();
@@ -13,6 +15,8 @@ const SignIn = () => {
   const [newPassword, setNewPassword] = useState('');
   const [isPasswordChangeRequired, setIsPasswordChangeRequired] = useState(false);
   
+  const dispatch = useDispatch(); // Get the dispatch function from Redux
+
   const handleLogin = async (e) => {
     e.preventDefault();  // Prevent the default form submission behavior
 
@@ -45,6 +49,14 @@ const SignIn = () => {
           secretAccessKey: accessToken.jwtToken,
           sessionToken: session.getIdToken().getJwtToken(),
         };
+
+        // Dispatch an action to store user credentials in Redux
+        dispatch(loginSuccess({
+          idToken: idToken.jwtToken,
+          accessToken: accessToken.jwtToken,
+          sessionToken: session.getIdToken().getJwtToken(),
+          // Add any additional user information you want to store
+        }));
 
         console.log(idToken, accessToken, credentials)
           navigate('/');
@@ -102,8 +114,6 @@ const SignIn = () => {
       });
     });
   };
-  
-  
 
   const handleNewPasswordChange = async () => {
       const poolData = {

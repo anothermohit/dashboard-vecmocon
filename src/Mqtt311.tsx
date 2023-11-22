@@ -10,11 +10,26 @@ import { useDispatch, useSelector } from 'react-redux';
 import { updateDeviceState } from './redux/actions/deviceActions';
 import { updateSeriesShadow } from './redux/actions/seriesActions';
 import extractData from './js/extractData';
+import store from './redux/store.js';
 
 const $: JQueryStatic = jquery;
 
 function log(msg: string) {
     $('#message').append(`<pre>${msg}</pre>`);
+}
+
+function getLoginCredentials() {
+    const state = store.getState();
+    console.log(state);
+    // Check if the user is authenticated and return the necessary credentials
+    if (state.auth.isAuthenticated && state.auth.user) {
+        const { idToken, accessToken, sessionToken } = state.auth.user;
+        return {
+            idToken,
+            accessToken,
+            sessionToken,
+        };
+        } else return null;
 }
 
 interface AWSCognitoCredentialOptions {
@@ -116,15 +131,8 @@ function Mqtt311(arg) {
     var user_msg_count = 0;
     var test_topic = "/test/topic";
 
-    async function PubSub() {
-        const provider = new AWSCognitoCredentialsProvider({
-            IdentityPoolId: AWS_COGNITO_IDENTITY_POOL_ID,
-            Region: AWS_REGION,
-        });
-
-        await provider.refreshCredentialAsync();
-
-        connectionPromise = connect_websocket(provider);
+    async function PubSub(credentialsProvider: AWSCognitoCredentialsProvider) {
+        connectionPromise = connect_websocket(credentialsProvider);
 
         connectionPromise.then((connection) => {
             if (arg.deviceId) {
@@ -159,9 +167,37 @@ function Mqtt311(arg) {
     }
 
     useEffect(() => {
-        PubSub(); // initial execution
+        // Define an asynchronous function inside useEffect
+        const connectToMQTT = async () => {
+            // Retrieve the credentials from the login component (assuming it's stored in some state)
+            const loginCredentials = getLoginCredentials();
+    
+            console.log(loginCredentials);
+            if (loginCredentials) {
+                const provider = new AWSCognitoCredentialsProvider({
+                    IdentityPoolId: AWS_COGNITO_IDENTITY_POOL_ID,
+                    Region: AWS_REGION,
+                });
+    
+                // Use the login credentials to refresh the AWS Cognito credentials
+                try {
+                    await provider.refreshCredentialAsync(loginCredentials);
+    
+                    // Connect to MQTT with the refreshed credentials
+                    console.log(provider);
+                    PubSub(provider);
+                } catch (error) {
+                    console.error('Error refreshing credentials:', error);
+                    // Handle the error (e.g., log, display a message, etc.)
+                }
+            }
+        };
+    
+        // Call the asynchronous function
+        connectToMQTT();
     }, []);
-
+    
+    
     async function PublishMessage() {
         const msg = `BUTTON CLICKED {${user_msg_count}}`;
 
