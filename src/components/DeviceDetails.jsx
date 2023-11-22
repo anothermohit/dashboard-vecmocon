@@ -53,7 +53,6 @@ const DeviceDetails = ({ series }) => {
       <DeviceData deviceId={deviceId} time={selectedTimePeriod} />
       <MQTT311 deviceId={deviceId} />
 
-{/*
       {series.seriesShadow ? <TableTwo deviceId={deviceId} initialData={series.seriesShadow}  /> : null}
       <br />
       <div className="flex w-full justify-end">
@@ -86,7 +85,6 @@ const DeviceDetails = ({ series }) => {
         <ChartThree />
       </div>
 
-      */}
     </div>
   );
 };

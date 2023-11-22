@@ -6,8 +6,9 @@ import { updateSeriesData, updateSeriesShadow } from './redux/actions/seriesActi
 import extractData from './js/extractData';
 import awsConfig from './aws.config.js';
 
-import { DynamoDBDocument } from "@aws-sdk/lib-dynamodb";
+import { DynamoDBDocument, QueryCommand, PutCommand } from "@aws-sdk/lib-dynamodb";
 import { DynamoDB } from "@aws-sdk/client-dynamodb";
+//import AWS from 'aws-sdk'
 // JS SDK v3 does not support global configuration.
 // Codemod has attempted to pass values to each service client in this file.
 // You may need to update clients outside of this file, if they use global config.
@@ -77,6 +78,8 @@ const DeviceData = ({deviceId, time}) => { // time - Hour, Day, Week, Month
       }
     });
 
+    const destinationTableName = 'Events'; // replace with your destination DynamoDB table name
+
  params = {
   TableName: 'vim_realtime_data',
   ScanIndexForward: false,
@@ -92,35 +95,98 @@ const DeviceData = ({deviceId, time}) => { // time - Hour, Day, Week, Month
   FilterExpression: 'attribute_exists(bms)',
 };
 
-// Query DynamoDB table to get the count
-dynamodb.query(params, (err, result) => {
-  if (err) {
-    console.error('Error querying DynamoDB table:', err);
-  } else {
-    console.log(result)
-    const bmsKeyExistsCount = result.Count;
-    console.log('Count of records where "bms" key exists:', bmsKeyExistsCount);
-  }
-});
+(async () => {
+  try {
+    const result = await dynamodb.send(new QueryCommand(params));
 
-/*
-    params = {
-      TableName: 'clientInfo',
-      Limit: 100
+    console.log(result.Items);
+
+    const isTransitionToCharging = (prevState, currentState) => currentState === 1 && (prevState === 0 || prevState === -1);
+    const isTransitionToEndCharging = (prevState, currentState) => currentState === 0 && prevState === 1;
+    const isTransitionToDischarging = (prevState, currentState) => currentState === -1 && (prevState === 0 || prevState === 1);
+    const isTransitionToEndDischarging = (prevState, currentState) => currentState === 0 && prevState === -1;
+    
+    const isIdleState = (currentState) => currentState === 0;
+
+    let prevState = 0;
+    let chargingStartTime = null;
+    let dischargingStartTime = null;
+    let idleStartTime = null;
+
+    const events = [];
+    let totalDatapointsInEvent = 0;
+
+    // Function to handle the end of an event
+    const handleEndEvent = (eventType, startTime, endTime) => {
+      if (startTime !== null) {
+        events.push({
+          device_id: deviceId,
+          start_timestamp: startTime,
+          end_timestamp: endTime,
+          type: eventType,
+          total_datapoints: totalDatapointsInEvent,
+        });
+        startTime = null;
+        totalDatapointsInEvent = 0;
+      }
     };
 
-    // Scan DynamoDB table
-    dynamodb.scan(params, (err, data) => {
-      if (err) {
-        console.error('Error scanning DynamoDB table:', err);
-      } else {
-        console.log('Scan result:', data);
-        dispatch(updateSeriesData(data.Items)); // Update Redux store
-      }
-    });
-    */
+    result.Items.forEach((record, index) => {
+      const bmsState = record.bms.bmsState[1];
+      console.log(bmsState);
 
-  }, [dispatch, time]);
+      if (isTransitionToCharging(prevState, bmsState)) {
+        handleEndEvent(0, idleStartTime, record.timestamp);
+        chargingStartTime = record.timestamp;
+        totalDatapointsInEvent = 1;
+      } else if (isTransitionToEndCharging(prevState, bmsState)) {
+        handleEndEvent(1, chargingStartTime, record.timestamp);
+        chargingStartTime = null;
+      } else if (isTransitionToDischarging(prevState, bmsState)) {
+        handleEndEvent(0, idleStartTime, record.timestamp);
+        dischargingStartTime = record.timestamp;
+        totalDatapointsInEvent = 1;
+      } else if (isTransitionToEndDischarging(prevState, bmsState)) {
+        handleEndEvent(-1, dischargingStartTime, record.timestamp);
+        dischargingStartTime = null;
+      } else if (isIdleState(bmsState)) {
+        if (idleStartTime === null) {
+          idleStartTime = record.timestamp;
+        }
+        totalDatapointsInEvent += 1;
+      } else {
+        totalDatapointsInEvent += 1;
+      }
+
+      // If this is the last record, handle the end of the last event
+      if (index === result.Items.length - 1) {
+        handleEndEvent(0, idleStartTime, record.timestamp);
+      }
+
+      prevState = bmsState;
+    });
+
+    // Calculate the sum of all datapoints
+    const totalDatapointsSum = events.reduce((sum, event) => sum + event.total_datapoints, 0);
+    console.log(events, totalDatapointsSum );
+
+    // Write events to "Events" table
+    for (const event of events) {
+      const putParams = {
+        TableName: destinationTableName,
+        Item: event,
+      };
+
+      // await dynamodb.send(new PutCommand(putParams));
+    }
+
+    console.log('Stored deviceId and startTimestamp in "Events" table successfully.');
+  } catch (error) {
+    console.error('Error:', error);
+  }
+})();
+}, [dispatch, deviceId, time]);
+
   return (
     <div>
     </div>

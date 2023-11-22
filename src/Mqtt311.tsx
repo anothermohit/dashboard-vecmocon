@@ -51,8 +51,10 @@ export class AWSCognitoCredentialsProvider extends auth.CredentialsProvider {
             aws_sts_token: "",
         };
 
-        setInterval(async () => {
-            await this.refreshCredentialAsync();
+        setInterval(() => {
+            this.refreshCredentialAsync().catch((error) => {
+                console.error("Error refreshing credentials:", error);
+            });
         }, expire_interval_in_ms ?? 3600 * 1000);
     }
 
@@ -63,7 +65,7 @@ export class AWSCognitoCredentialsProvider extends auth.CredentialsProvider {
     async refreshCredentialAsync() {
         try {
             const credentials = await fromCognitoIdentityPool({
-                client: new CognitoIdentityClient({ region: this.options.Region }), // Add the region option here
+                client: new CognitoIdentityClient({ region: this.options.Region }),
                 identityPoolId: this.options.IdentityPoolId,
             })();
 
@@ -171,18 +173,17 @@ function Mqtt311(arg) {
         const connectToMQTT = async () => {
             // Retrieve the credentials from the login component (assuming it's stored in some state)
             const loginCredentials = getLoginCredentials();
-    
+
             console.log(loginCredentials);
             if (loginCredentials) {
                 const provider = new AWSCognitoCredentialsProvider({
                     IdentityPoolId: AWS_COGNITO_IDENTITY_POOL_ID,
-                    Region: AWS_REGION,
+                    Region: AWS_REGION, // Make sure AWS_REGION is defined and has a valid AWS region value
                 });
-    
                 // Use the login credentials to refresh the AWS Cognito credentials
                 try {
-                    await provider.refreshCredentialAsync(loginCredentials);
-    
+                    await provider.refreshCredentialAsync();
+
                     // Connect to MQTT with the refreshed credentials
                     console.log(provider);
                     PubSub(provider);
@@ -192,10 +193,11 @@ function Mqtt311(arg) {
                 }
             }
         };
-    
+
         // Call the asynchronous function
         connectToMQTT();
     }, []);
+
     
     
     async function PublishMessage() {
