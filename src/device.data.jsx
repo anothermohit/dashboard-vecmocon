@@ -6,7 +6,7 @@ import { updateSeriesData, updateSeriesShadow } from './redux/actions/seriesActi
 import extractData from './js/extractData';
 import awsConfig from './aws.config.js';
 
-import { DynamoDBDocument, QueryCommand, PutCommand } from "@aws-sdk/lib-dynamodb";
+import { DynamoDBDocument, ScanCommand, BatchWriteCommand } from "@aws-sdk/lib-dynamodb";
 import { DynamoDB } from "@aws-sdk/client-dynamodb";
 //import AWS from 'aws-sdk'
 // JS SDK v3 does not support global configuration.
@@ -49,7 +49,7 @@ const DeviceData = ({deviceId, time}) => { // time - Hour, Day, Week, Month
     // Calculate startTime for 10 years ago
     const tenYearsAgo = new Date();
     tenYearsAgo.setFullYear(tenYearsAgo.getFullYear() - 10);
-    initialTime = Math.floor(tenYearsAgo.getTime() / 1000); // Convert to epoch format
+    initialTime = new Date(0).getTime();; //Math.floor(tenYearsAgo.getTime() / 1000); // Convert to epoch format
 
     // Define your query parameters
     params = {
@@ -80,106 +80,101 @@ const DeviceData = ({deviceId, time}) => { // time - Hour, Day, Week, Month
 
     const destinationTableName = 'Events'; // replace with your destination DynamoDB table name
 
- params = {
-  TableName: 'vim_realtime_data',
-  ScanIndexForward: false,
-  Limit: 1000,
-  KeyConditionExpression: 'device_id = :value AND #timestamp >= :timestamp',
-  ExpressionAttributeValues: {
-    ':value': deviceId,
-    ':timestamp': initialTime,
-  },
-  ExpressionAttributeNames: {
-    '#timestamp': 'timestamp', // 'timestamp' is a reserved word in DynamoDB, so use ExpressionAttributeNames to specify it
-  },
-  FilterExpression: 'attribute_exists(bms)',
-};
+    params = {
+      TableName: 'vim_realtime_data',
+      Limit: 1000,
+      ScanIndexForward: false, // Sort in descending order based on timestamp
+      FilterExpression: 'device_id = :value AND #timestamp >= :timestamp',
+      ExpressionAttributeValues: {
+        ':value': deviceId,
+        ':timestamp': initialTime,
+      },
+      ExpressionAttributeNames: {
+        '#timestamp': 'timestamp',
+      },
+    };
 
 (async () => {
   try {
-    const result = await dynamodb.send(new QueryCommand(params));
+    const result = await dynamodb.send(new ScanCommand(params));
+
+    for (const r of result.Items) console.log(r.bms.bmsState[1]);
 
     console.log(result.Items);
 
-    const isTransitionToCharging = (prevState, currentState) => currentState === 1 && (prevState === 0 || prevState === -1);
-    const isTransitionToEndCharging = (prevState, currentState) => currentState === 0 && prevState === 1;
-    const isTransitionToDischarging = (prevState, currentState) => currentState === -1 && (prevState === 0 || prevState === 1);
-    const isTransitionToEndDischarging = (prevState, currentState) => currentState === 0 && prevState === -1;
-    
-    const isIdleState = (currentState) => currentState === 0;
-
-    let prevState = 0;
-    let chargingStartTime = null;
-    let dischargingStartTime = null;
-    let idleStartTime = null;
+    const points = result.Items.map(item => ({
+      bmsState: item.bms.bmsState[1],
+      timestamp: item.timestamp,
+    })).reverse();
+    console.log(points);
 
     const events = [];
-    let totalDatapointsInEvent = 0;
 
-    // Function to handle the end of an event
-    const handleEndEvent = (eventType, startTime, endTime) => {
-      if (startTime !== null) {
-        events.push({
-          device_id: deviceId,
-          start_timestamp: startTime,
-          end_timestamp: endTime,
-          type: eventType,
-          total_datapoints: totalDatapointsInEvent,
-        });
-        startTime = null;
-        totalDatapointsInEvent = 0;
-      }
-    };
+    let currentEvent = null;
+    
+    for (const point of points) {
+      const bmsState = point.bmsState;
+      const timestamp = point.timestamp;
 
-    result.Items.forEach((record, index) => {
-      const bmsState = record.bms.bmsState[1];
-      console.log(bmsState);
-
-      if (isTransitionToCharging(prevState, bmsState)) {
-        handleEndEvent(0, idleStartTime, record.timestamp);
-        chargingStartTime = record.timestamp;
-        totalDatapointsInEvent = 1;
-      } else if (isTransitionToEndCharging(prevState, bmsState)) {
-        handleEndEvent(1, chargingStartTime, record.timestamp);
-        chargingStartTime = null;
-      } else if (isTransitionToDischarging(prevState, bmsState)) {
-        handleEndEvent(0, idleStartTime, record.timestamp);
-        dischargingStartTime = record.timestamp;
-        totalDatapointsInEvent = 1;
-      } else if (isTransitionToEndDischarging(prevState, bmsState)) {
-        handleEndEvent(-1, dischargingStartTime, record.timestamp);
-        dischargingStartTime = null;
-      } else if (isIdleState(bmsState)) {
-        if (idleStartTime === null) {
-          idleStartTime = record.timestamp;
+      console.log(bmsState)
+    
+      if (currentEvent === null || currentEvent.type !== bmsState) {
+        // Start a new event
+        if (currentEvent !== null) {
+          events.push(currentEvent);
         }
-        totalDatapointsInEvent += 1;
+    
+        currentEvent = {
+          device_id: deviceId,
+          type: bmsState,
+          start_timestamp: timestamp,
+          end_timestamp: timestamp,
+          datapoints: 1,
+        };
       } else {
-        totalDatapointsInEvent += 1;
+        // Continue the current event
+        currentEvent.end_timestamp = timestamp;
+        currentEvent.datapoints += 1;
       }
-
-      // If this is the last record, handle the end of the last event
-      if (index === result.Items.length - 1) {
-        handleEndEvent(0, idleStartTime, record.timestamp);
-      }
-
-      prevState = bmsState;
-    });
+    }
+    
+    // Add the last event to the events array
+    if (currentEvent !== null) {
+      events.push(currentEvent);
+    }
+    
+    // Print the resulting events array
+    console.log(events);
 
     // Calculate the sum of all datapoints
-    const totalDatapointsSum = events.reduce((sum, event) => sum + event.total_datapoints, 0);
+    const totalDatapointsSum = events.reduce((sum, event) => sum + event.datapoints, 0);
     console.log(events, totalDatapointsSum );
+    // Write events to "Events" table in batches of 25
+    
+    const batchSize = 25;
+    for (let i = 0; i < events.length; i += batchSize) {
+      const batch = events.slice(i, i + batchSize);
 
-    // Write events to "Events" table
-    for (const event of events) {
-      const putParams = {
-        TableName: destinationTableName,
-        Item: event,
+      const putRequests = batch.map((event) => ({
+        PutRequest: {
+          Item: event,
+        },
+      }));
+
+      const params = {
+        RequestItems: {
+          [destinationTableName]: putRequests,
+        },
       };
 
-      // await dynamodb.send(new PutCommand(putParams));
+      try {
+        await dynamodb.send(new BatchWriteCommand(params));
+        console.log(`Batch write successful for items ${i + 1} to ${i + batchSize}.`);
+      } catch (error) {
+        console.error(`Error during batch write for items ${i + 1} to ${i + batchSize}:`, error);
+      }
     }
-
+  
     console.log('Stored deviceId and startTimestamp in "Events" table successfully.');
   } catch (error) {
     console.error('Error:', error);
