@@ -3,6 +3,9 @@ import { Link } from 'react-router-dom';
 
 import UserOne from '../images/user/user-01.jpeg';
 
+const credentials = sessionStorage.getItem('credentials');
+const { email } = JSON.parse(credentials);
+
 const DropdownUser = () => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
@@ -35,6 +38,14 @@ const DropdownUser = () => {
     return () => document.removeEventListener('keydown', keyHandler);
   });
 
+  // Function to handle logout
+  const handleLogout = () => {
+    // Clear credentials from sessionStorage
+    sessionStorage.removeItem('credentials');
+    window.location.reload();
+    // Add additional logout logic if needed
+  };
+  
   return (
     <div className="relative">
       <Link
@@ -45,9 +56,9 @@ const DropdownUser = () => {
       >
         <span className="hidden text-right lg:block">
           <span className="block text-sm font-medium text-black dark:text-white">
-            Mohit Aggarwal
+            {email}
           </span>
-          <span className="block text-xs">App Developer</span>
+          <span className="block text-xs">Vecmocon</span>
         </span>
 
         <span className="h-12 w-12 rounded-full">
@@ -155,7 +166,9 @@ const DropdownUser = () => {
             </Link>
           </li>
         </ul>
-        <button className="flex items-center gap-3.5 py-4 px-6 text-sm font-medium duration-300 ease-in-out hover:text-primary lg:text-base">
+        <button           
+          onClick={handleLogout}
+          className="flex items-center gap-3.5 py-4 px-6 text-sm font-medium duration-300 ease-in-out hover:text-primary lg:text-base">
           <svg
             className="fill-current"
             width="22"

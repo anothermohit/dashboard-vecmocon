@@ -6,7 +6,7 @@ import { updateSeriesData, updateSeriesShadow } from './redux/actions/seriesActi
 import extractData from './js/extractData';
 import awsConfig from './aws.config.js';
 
-import { DynamoDBDocument, ScanCommand, BatchWriteCommand } from "@aws-sdk/lib-dynamodb";
+import { DynamoDBDocument, QueryCommand, BatchWriteCommand } from "@aws-sdk/lib-dynamodb";
 import { DynamoDB } from "@aws-sdk/client-dynamodb";
 //import AWS from 'aws-sdk'
 // JS SDK v3 does not support global configuration.
@@ -28,6 +28,7 @@ const DeviceData = ({deviceId, time}) => { // time - Hour, Day, Week, Month
   //const seriesData = useSelector((state) => state.series.seriesData);
 
   useEffect(() => {
+    
     // Create a DynamoDB instance
     const dynamodb = DynamoDBDocument.from(new DynamoDB(awsConfig));
     let params = {}
@@ -78,13 +79,11 @@ const DeviceData = ({deviceId, time}) => { // time - Hour, Day, Week, Month
       }
     });
 
-    const destinationTableName = 'Events'; // replace with your destination DynamoDB table name
-
+    // count the records
+    // Define your query parameters
     params = {
       TableName: 'vim_realtime_data',
-      Limit: 1000,
-      ScanIndexForward: false, // Sort in descending order based on timestamp
-      FilterExpression: 'device_id = :value AND #timestamp >= :timestamp',
+      KeyConditionExpression: 'device_id = :value AND #timestamp >= :timestamp',
       ExpressionAttributeValues: {
         ':value': deviceId,
         ':timestamp': initialTime,
@@ -92,95 +91,134 @@ const DeviceData = ({deviceId, time}) => { // time - Hour, Day, Week, Month
       ExpressionAttributeNames: {
         '#timestamp': 'timestamp',
       },
+      Select: 'COUNT',  // Specify that you want to get the count of matching items
+      // ProjectionExpression: 'deviceInfo, #timestamp', // You can omit the ProjectionExpression for counting
     };
 
-(async () => {
-  try {
-    const result = await dynamodb.send(new ScanCommand(params));
+    // Query DynamoDB table for count
+    dynamodb.query(params, (err, countResult) => {
+      if (err) {
+        console.error('Error querying DynamoDB table:', err);
+      } else {
+        const itemCount = countResult.Count;
+        console.log('Count result:', itemCount);
+        // You might want to dispatch or handle the itemCount as needed
+      }
+    });
 
-    for (const r of result.Items) console.log(r.bms.bmsState[1]);
+    const destinationTableName = 'Events'; // replace with your destination DynamoDB table name
 
-    console.log(result.Items);
-
-    const points = result.Items.map(item => ({
-      bmsState: item.bms.bmsState[1],
-      timestamp: item.timestamp,
-    })).reverse();
-    console.log(points);
-
-    const events = [];
-
-    let currentEvent = null;
+    params = {
+      TableName: 'vim_realtime_data',
+      ScanIndexForward: false,
+      Limit: 1000,
+      KeyConditionExpression: 'device_id = :value AND #timestamp >= :timestamp',
+      ExpressionAttributeValues: {
+        ':value': deviceId,
+        ':timestamp': initialTime,
+      },
+      ExpressionAttributeNames: {
+        '#timestamp': 'timestamp', // 'timestamp' is a reserved word in DynamoDB, so use ExpressionAttributeNames to specify it
+      },
+      FilterExpression: 'attribute_exists(bms)',
+    };
     
-    for (const point of points) {
-      const bmsState = point.bmsState;
-      const timestamp = point.timestamp;
-
-      console.log(bmsState)
+    (async () => {
+      try {
+        const result = await dynamodb.send(new QueryCommand(params));
     
-      if (currentEvent === null || currentEvent.type !== bmsState) {
-        // Start a new event
+        for (const r of result.Items) console.log(r.bms.bmsState[1]);
+    
+        console.log(result);
+    
+        const points = result.Items.map(item => ({
+          bmsState: item.bms.bmsState[1],
+          timestamp: item.timestamp,
+          totalDistance: item.gps[8]
+        })).reverse();
+        console.log(points);
+    
+        const events = [];
+    
+        let currentEvent = null;
+        // point: {timestamp, bmsState, totalDistance}
+        for (const point of points) {
+          const bmsState = point.bmsState;
+          const timestamp = point.timestamp;
+
+          console.log(bmsState);
+
+          if (currentEvent === null || currentEvent.type !== bmsState) {
+            // Start a new event
+            if (currentEvent !== null) {
+              // Calculate distance for the current event
+              currentEvent.distance = currentEvent.end_totalDistance - currentEvent.start_totalDistance;
+
+              events.push(currentEvent);
+            }
+
+            currentEvent = {
+              device_id: deviceId,
+              type: bmsState,
+              start_timestamp: timestamp,
+              end_timestamp: timestamp,
+              start_totalDistance: point.totalDistance, // Store the total distance of the first datapoint
+              end_totalDistance: point.totalDistance,   // Initialize end_totalDistance with the total distance of the first datapoint
+              datapoints: 1,
+            };
+          } else {
+            // Continue the current event
+            currentEvent.end_timestamp = timestamp;
+            currentEvent.end_totalDistance = point.totalDistance; // Update the total distance of the last datapoint within the event
+            currentEvent.datapoints += 1;
+          }
+        }
+
+        // After the loop, handle the last event if it exists
         if (currentEvent !== null) {
+          // Calculate distance for the last event
+          currentEvent.distance = currentEvent.end_totalDistance - currentEvent.start_totalDistance;
           events.push(currentEvent);
         }
-    
-        currentEvent = {
-          device_id: deviceId,
-          type: bmsState,
-          start_timestamp: timestamp,
-          end_timestamp: timestamp,
-          datapoints: 1,
-        };
-      } else {
-        // Continue the current event
-        currentEvent.end_timestamp = timestamp;
-        currentEvent.datapoints += 1;
-      }
-    }
-    
-    // Add the last event to the events array
-    if (currentEvent !== null) {
-      events.push(currentEvent);
-    }
-    
-    // Print the resulting events array
-    console.log(events);
 
-    // Calculate the sum of all datapoints
-    const totalDatapointsSum = events.reduce((sum, event) => sum + event.datapoints, 0);
-    console.log(events, totalDatapointsSum );
-    // Write events to "Events" table in batches of 25
+        // Print the resulting events array
+        console.log(events);
     
-    const batchSize = 25;
-    for (let i = 0; i < events.length; i += batchSize) {
-      const batch = events.slice(i, i + batchSize);
-
-      const putRequests = batch.map((event) => ({
-        PutRequest: {
-          Item: event,
-        },
-      }));
-
-      const params = {
-        RequestItems: {
-          [destinationTableName]: putRequests,
-        },
-      };
-
-      try {
-        await dynamodb.send(new BatchWriteCommand(params));
-        console.log(`Batch write successful for items ${i + 1} to ${i + batchSize}.`);
+        // Calculate the sum of all datapoints
+        const totalDatapointsSum = events.reduce((sum, event) => sum + event.datapoints, 0);
+        console.log(events, totalDatapointsSum );
+        // Write events to "Events" table in batches of 25
+        
+        const batchSize = 25;
+        for (let i = 0; i < events.length; i += batchSize) {
+          const batch = events.slice(i, i + batchSize);
+    
+          const putRequests = batch.map((event) => ({
+            PutRequest: {
+              Item: event,
+            },
+          }));
+    
+          const params = {
+            RequestItems: {
+              [destinationTableName]: putRequests,
+            },
+          };
+    
+          try {
+            //await dynamodb.send(new BatchWriteCommand(params));
+            console.log(`Batch write successful for items ${i + 1} to ${i + batchSize}.`);
+          } catch (error) {
+            console.error(`Error during batch write for items ${i + 1} to ${i + batchSize}:`, error);
+          }
+        }
+      
+        console.log('Stored deviceId and startTimestamp in "Events" table successfully.');
       } catch (error) {
-        console.error(`Error during batch write for items ${i + 1} to ${i + batchSize}:`, error);
+        console.error('Error:', error);
       }
-    }
-  
-    console.log('Stored deviceId and startTimestamp in "Events" table successfully.');
-  } catch (error) {
-    console.error('Error:', error);
-  }
-})();
-}, [dispatch, deviceId, time]);
+    })();
+    }, [dispatch, deviceId, time]);
 
   return (
     <div>

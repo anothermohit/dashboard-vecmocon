@@ -45,6 +45,7 @@ const SignIn = () => {
         // Use the tokens as credentials for PubSub
         const { idToken, accessToken } = session;
         const credentials = {
+          email,
           accessKeyId: idToken.jwtToken,
           secretAccessKey: accessToken.jwtToken,
           sessionToken: session.getIdToken().getJwtToken(),
@@ -58,8 +59,11 @@ const SignIn = () => {
           // Add any additional user information you want to store
         }));
 
+        // Store user credentials in sessionStorage
+        sessionStorage.setItem('credentials', JSON.stringify(credentials));
+
         console.log(idToken, accessToken, credentials)
-          navigate('/');
+        window.location.reload();
         },
         onFailure: (err) => {
             console.error('Authentication failed:', err);
@@ -115,7 +119,8 @@ const SignIn = () => {
     });
   };
 
-  const handleNewPasswordChange = async () => {
+  const handleNewPasswordChange = async (e) => {
+    e.preventDefault();  // Prevent the default form submission behavior
       const poolData = {
           UserPoolId: 'us-east-1_vBr9qRmmd',
           ClientId: '5dngq7m5g8qsi91ephbp1lovn0',
@@ -144,9 +149,8 @@ const SignIn = () => {
               console.log(session)
               cognitoUser.completeNewPasswordChallenge(newPassword, {}, {
                   onSuccess: (session) => {
-                      console.log('New password set successfully:', session);
-                      // After setting the new password, you can redirect the user to the main application
-                      onLogin();
+                      console.log('New password set successfullyy:', session);
+                       // Use the tokens as credentials for PubSub
                   },
                   onFailure: (err) => {
                       console.error('Failed to set new password:', err);
@@ -165,7 +169,27 @@ const SignIn = () => {
                   onSuccess: (session) => {
                       console.log('New password set successfully:', session);
                       // After setting the new password, you can redirect the user to the main application
-                      onLogin();
+                      const { idToken, accessToken } = session;
+                      const credentials = {
+                        email,
+                        accessKeyId: idToken.jwtToken,
+                        secretAccessKey: accessToken.jwtToken,
+                        sessionToken: session.getIdToken().getJwtToken(),
+                      };
+
+                      // Dispatch an action to store user credentials in Redux
+                      dispatch(loginSuccess({
+                        idToken: idToken.jwtToken,
+                        accessToken: accessToken.jwtToken,
+                        sessionToken: session.getIdToken().getJwtToken(),
+                        // Add any additional user information you want to store
+                      }));
+
+                      // Store user credentials in sessionStorage
+                      sessionStorage.setItem('credentials', JSON.stringify(credentials));
+
+                      console.log(idToken, accessToken, credentials)
+                      window.location.reload();                      
                   },
                   onFailure: (err) => {
                       console.error('Failed to set new password:', err);
@@ -180,7 +204,7 @@ const SignIn = () => {
 
   return (
     <>
-      <div className="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
+      <div style={{height: '100%'}} className="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
         <div className="flex flex-wrap items-center">
           <div className="hidden w-full xl:block xl:w-1/2">
             <div className="py-17.5 px-26 text-center">
@@ -321,11 +345,16 @@ const SignIn = () => {
           <div className="w-full border-stroke dark:border-strokedark xl:w-1/2 xl:border-l-2">
             <div className="w-full p-4 sm:p-12.5 xl:p-17.5">
               <span className="mb-1.5 block font-medium">Real-Time Monitoring Tool</span>
+              {isPasswordChangeRequired ? 
+              <h2 className="mb-9 text-2xl font-bold text-black dark:text-white sm:text-title-xl2">
+                Reset Password
+              </h2>
+              :
               <h2 className="mb-9 text-2xl font-bold text-black dark:text-white sm:text-title-xl2">
                 Sign In to Vecmocon Dashboard
-              </h2>
+              </h2>}
 
-              <form onSubmit={handleLogin}>
+              <form onSubmit={isPasswordChangeRequired ? handleNewPasswordChange : handleLogin}>
                 <div className="mb-4">
                   <label className="mb-2.5 block font-medium text-black dark:text-white">
                     Email
@@ -364,13 +393,22 @@ const SignIn = () => {
                     Password
                   </label>
                   <div className="relative">
+                    {isPasswordChangeRequired ? 
+                    <input
+                      value={newPassword} 
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      type="password"
+                      placeholder="New Password: Example*123"
+                      className="w-full rounded-lg border border-stroke bg-transparent py-4 pl-6 pr-10 outline-none focus:border-primary focus-visible:shadow-none dark:border-form-strokedark dark:bg-form-input dark:focus:border-primary"
+                    />
+                    :
                     <input
                       value={password} 
                       onChange={(e) => setPassword(e.target.value)}
                       type="password"
-                      placeholder="6+ Characters, 1 Capital letter"
+                      placeholder="Your Password"
                       className="w-full rounded-lg border border-stroke bg-transparent py-4 pl-6 pr-10 outline-none focus:border-primary focus-visible:shadow-none dark:border-form-strokedark dark:bg-form-input dark:focus:border-primary"
-                    />
+                    />}
 
                     <span className="absolute right-4 top-4">
                       <svg

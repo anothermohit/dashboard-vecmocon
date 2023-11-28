@@ -1,10 +1,6 @@
 import React, { useState } from 'react';
 import { connect } from 'react-redux';
 import { useParams } from 'react-router-dom';
-import CardFour from './CardFour.tsx';
-import CardOne from './CardOne.tsx';
-import CardThree from './CardThree.tsx';
-import CardTwo from './CardTwo.tsx';
 import ChartOne from './ChartOne.tsx';
 import ChartThree from './ChartThree.tsx';
 import ChartTwo from './ChartTwo.tsx';
@@ -36,6 +32,7 @@ const DeviceDetails = ({ series }) => {
   const { deviceId } = useParams();
   if (series.seriesShadow) addShadowToData(series.seriesData, series.seriesShadow);
   else series.seriesShadow = series.seriesData[0];
+  console.log(series);
 
   const [selectedTimePeriod, setSelectedTimePeriod] = useState('Hour'); // Default to 'Hour'
 
@@ -46,13 +43,11 @@ const DeviceDetails = ({ series }) => {
     Month: 'Month',
   };
 
+  console.log(selectedTimePeriod);
 
   return (
     <div>
       <br />
-      <DeviceData deviceId={deviceId} time={selectedTimePeriod} />
-      <MQTT311 deviceId={deviceId} />
-
       {series.seriesShadow ? <TableTwo deviceId={deviceId} initialData={series.seriesShadow}  /> : null}
       <br />
       <div className="flex w-full justify-end">
@@ -68,14 +63,8 @@ const DeviceDetails = ({ series }) => {
           ))}
         </div>
       </div>
-
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-6 xl:grid-cols-4 2xl:gap-7.5">
-        <CardOne />
-        <CardTwo />
-        <CardThree />
-        <CardFour />
-      </div>
-
+      <DeviceData deviceId={deviceId} time={selectedTimePeriod} />
+      <MQTT311 deviceId={deviceId} />
       <div className="mt-4 grid grid-cols-12 gap-4 md:mt-6 md:gap-6 2xl:mt-7.5 2xl:gap-7.5">
         {series.seriesData.length ? <ChartOne initialData={series.seriesData} /> : null}
         {series.seriesData.length ? <ChartFive initialData={series.seriesData || []} /> : null}
@@ -84,7 +73,6 @@ const DeviceDetails = ({ series }) => {
         <ChartTwo />
         <ChartThree />
       </div>
-
     </div>
   );
 };

@@ -19,17 +19,15 @@ function log(msg: string) {
 }
 
 function getLoginCredentials() {
-    const state = store.getState();
-    console.log(state);
     // Check if the user is authenticated and return the necessary credentials
-    if (state.auth.isAuthenticated && state.auth.user) {
-        const { idToken, accessToken, sessionToken } = state.auth.user;
-        return {
-            idToken,
-            accessToken,
-            sessionToken,
-        };
-        } else return null;
+    const credentials = sessionStorage.getItem('credentials');
+    const { email, idToken, accessToken, sessionToken } = JSON.parse(credentials);;
+    console.log(credentials, idToken, email);
+    return {
+        idToken,
+        accessToken,
+        sessionToken,
+    };
 }
 
 interface AWSCognitoCredentialOptions {
@@ -162,6 +160,21 @@ function Mqtt311(arg) {
                         });
                     });
                 });
+
+                /*
+                            const wildcardTopic = "$aws/things/+/shadow/update";
+
+            connection.subscribe(wildcardTopic, mqtt.QoS.AtLeastOnce, (topic, payload) => {
+                const decoder = new TextDecoder('utf8');
+                let message = decoder.decode(new Uint8Array(payload));
+                let state = JSON.parse(message).state;
+                // Extract the deviceId from the subscribed topic
+                const deviceId = topic.split("/")[3];
+                // Handle the state update for the specific device here
+                // For example, dispatch an action to update the Redux store
+                dispatch(updateDeviceState(deviceId, state));
+            });
+            */
             }
         }).catch((reason) => {
             console.log(`Error while connecting: ${reason}`);

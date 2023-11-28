@@ -12,6 +12,9 @@ import Map from './pages/Map.jsx';
 
 const DefaultLayout = lazy(() => import('./layout/DefaultLayout'));
 
+const credentials = sessionStorage.getItem('credentials');
+console.log(credentials);
+
 function App() {
   const [loading, setLoading] = useState<boolean>(true);
 
@@ -31,6 +34,7 @@ function App() {
       <Routes>
         <Route path="/auth/signin" element={<SignIn />} />
         <Route path="/auth/signup" element={<SignUp />} />
+        {credentials ? 
         <Route element={<DefaultLayout />}>
           <Route index element={<AllDevices />} />
           <Route path="/device/:deviceId" element={<DeviceDetails />} />
@@ -49,6 +53,8 @@ function App() {
             );
           })}
         </Route>
+        :
+          <Route index element={<SignIn />} />}
       </Routes>
     </>
   );
