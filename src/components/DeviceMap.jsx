@@ -74,49 +74,68 @@ const DeviceMap = () => {
     }
   };
 
-  const simulateVehicleMovement = (mapInstance, vehicle) => {
-    let movementInterval;
-    let updateCounter = 0;
-  
-    movementInterval = setInterval(() => {
-      const newLat = vehicle.position.lat;
-      const newLng = vehicle.position.lng + vehicle.speed;
-  
-      const newVehiclePosition = { lat: newLat, lng: newLng };
-  
-      if (
-        geofenceCircle &&
-        window.google.maps.geometry.spherical.computeDistanceBetween(
-          geofenceCircle.getCenter(),
-          new window.google.maps.LatLng(newLat, newLng)
-        ) > geofenceCircle.getRadius()
-      ) {
-        clearInterval(movementInterval);
-        alert('Dummy vehicle breached the geofence boundary!');
-        clearMarkers(); // Clear markers when the boundary is breached
-      }
-  
-      updateCounter++;
-      if (updateCounter >= 22) {
-        clearInterval(movementInterval);
-        alert('Dummy vehicle breached the geofence boundary!');
-        clearMarkers(); // Clear markers when the maximum number of updates is reached
-      }
-  
-      updateVehicleMarker(mapInstance, vehicle.id, newVehiclePosition, movementInterval);
-  
-      vehicle.position.lat = newLat;
-      vehicle.position.lng = newLng;
-    }, 100);
-  
-    // Function to clear markers
-    const clearMarkers = () => {
-      Object.values(deviceMarkers).forEach((marker) => marker.setMap(null));
-      setDeviceMarkers({});
-    };
+  // immobalize
+// immobalize
+const simulateVehicleMovement = (mapInstance, vehicle) => {
+  let movementInterval;
+  let updateCounter = 0;
+  let reduceSpeed = false; // Flag to control speed reduction
+
+  movementInterval = setInterval(() => {
+    const newLat = vehicle.position.lat;
+    let newLng;
+
+    // Reduce speed to 10% after the 22nd update
+    if (reduceSpeed) {
+      newLng = vehicle.position.lng + vehicle.speed * 0.1;
+    } else {
+      newLng = vehicle.position.lng + vehicle.speed;
+    }
+
+    const newVehiclePosition = { lat: newLat, lng: newLng };
+
+    if (
+      geofenceCircle &&
+      window.google.maps.geometry.spherical.computeDistanceBetween(
+        geofenceCircle.getCenter(),
+        new window.google.maps.LatLng(newLat, newLng)
+      ) > geofenceCircle.getRadius()
+    ) {
+      clearInterval(movementInterval);
+      alert('Dummy vehicle breached the geofence boundary!');
+      clearMarkers(); // Clear markers when the boundary is breached
+    }
+
+    updateCounter++;
+    if (updateCounter === 22 && !reduceSpeed) {
+      alert('Dummy vehicle reached the maximum number of updates!');
+      reduceSpeed = true; // Set the flag to reduce speed after the alert is acknowledged
+    } else if (updateCounter >= 60) {
+      clearInterval(movementInterval);
+      clearMarkers();
+    }
+
+    updateVehicleMarker(mapInstance, vehicle.id, newVehiclePosition);
+
+    vehicle.position.lat = newLat;
+    vehicle.position.lng = newLng;
+  }, 100);
+
+  // Function to clear markers
+  const clearMarkers = () => {
+    Object.values(deviceMarkers).forEach((marker) => marker.setMap(null));
+    setDeviceMarkers({});
   };
-  
-  
+
+  // Cleanup markers and interval when component unmounts
+  useEffect(() => {
+    return () => {
+      clearMarkers();
+      clearInterval(movementInterval);
+    };
+  }, []);
+};
+
 
   const updateVehicleMarker = (mapInstance, vehicleId, newPosition, interval) => {
     const newMarker = new window.google.maps.Marker({
@@ -146,7 +165,7 @@ const DeviceMap = () => {
       ) > geofenceCircle.getRadius()
     ) {
       clearInterval(interval);
-      alert('Dummy vehicle breached the geofence boundary!');
+      //alert('Dummy vehicle breached the geofence boundary!!!');
     }
   };
   
