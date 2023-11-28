@@ -22,7 +22,7 @@ const AllDevices = (props) => {
         <CardFour />
       </div>
       <br />
-      {/*dataItems.length ? <MQTT311 dataItems={dataItems} /> : null*/} {/* real-time state of every device in devices */}
+      {dataItems.length ? <MQTT311 dataItems={dataItems} /> : null} {/* real-time state of every device in devices */}
       <DeviceMap devices={devices} /> {/* passing real-time state of all devices */}
       <div className="col-span-12 xl:col-span-8">
         <TableOne style={{marginTop:20, paddingBottom: 20}} devices={devices} />

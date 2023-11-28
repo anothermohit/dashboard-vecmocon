@@ -33,11 +33,11 @@ const AwsData = () => {
     const dynamodb = DynamoDBDocument.from(new DynamoDB(awsConfig));
     let params = {}
 
-    const credentials = sessionStorage.getItem('credentials');
+    const credentials = localStorage.getItem('credentials');
     const { email } = JSON.parse(credentials);
 
     console.log(email)
-    params = {
+  params = {
       TableName: 'clientInfo',
       Limit: 100
     };

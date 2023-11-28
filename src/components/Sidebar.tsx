@@ -218,7 +218,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
                       fill=""
                     />
                   </svg>
-                  Map
+                  Geofence
                 </NavLink>
               </li>
               {/* <!-- Menu Item Map --> */}

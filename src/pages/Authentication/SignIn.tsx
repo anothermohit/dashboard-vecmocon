@@ -14,11 +14,13 @@ const SignIn = () => {
   const [password, setPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [isPasswordChangeRequired, setIsPasswordChangeRequired] = useState(false);
-  
+  const [loading, setLoading] = useState(false);
+
   const dispatch = useDispatch(); // Get the dispatch function from Redux
 
   const handleLogin = async (e) => {
     e.preventDefault();  // Prevent the default form submission behavior
+    if (email && password) setLoading(true);
 
     const poolData = {
         UserPoolId: 'us-east-1_vBr9qRmmd',
@@ -30,6 +32,7 @@ const SignIn = () => {
         Username: email,
         Password: password,
     };
+    console.log(email, password)
     const authenticationDetails = new AuthenticationDetails(authenticationData);
 
     const userData = {
@@ -59,8 +62,8 @@ const SignIn = () => {
           // Add any additional user information you want to store
         }));
 
-        // Store user credentials in sessionStorage
-        sessionStorage.setItem('credentials', JSON.stringify(credentials));
+        // Store user credentials in localStorage
+        localStorage.setItem('credentials', JSON.stringify(credentials));
 
         console.log(idToken, accessToken, credentials)
         window.location.reload();
@@ -185,8 +188,8 @@ const SignIn = () => {
                         // Add any additional user information you want to store
                       }));
 
-                      // Store user credentials in sessionStorage
-                      sessionStorage.setItem('credentials', JSON.stringify(credentials));
+                      // Store user credentials in localStorage
+                      localStorage.setItem('credentials', JSON.stringify(credentials));
 
                       console.log(idToken, accessToken, credentials)
                       window.location.reload();                      
@@ -435,12 +438,21 @@ const SignIn = () => {
                 </div>
 
                 <div className="mb-5">
+                  {loading ? 
+                  <button
+                    type="submit"
+                    className="w-full cursor-pointer rounded-lg border border-primary bg-primary p-4 text-white transition hover:bg-opacity-90"
+                  >
+                    Signing In ...
+                  </button>
+                  :
                   <button
                     type="submit"
                     className="w-full cursor-pointer rounded-lg border border-primary bg-primary p-4 text-white transition hover:bg-opacity-90"
                   >
                     Sign In
                   </button>
+                  }                  
                 </div>
               </form>
             </div>

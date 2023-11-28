@@ -12,7 +12,7 @@ import Map from './pages/Map.jsx';
 
 const DefaultLayout = lazy(() => import('./layout/DefaultLayout'));
 
-const credentials = sessionStorage.getItem('credentials');
+const credentials = localStorage.getItem('credentials');
 console.log(credentials);
 
 function App() {

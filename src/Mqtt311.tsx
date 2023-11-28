@@ -20,7 +20,7 @@ function log(msg: string) {
 
 function getLoginCredentials() {
     // Check if the user is authenticated and return the necessary credentials
-    const credentials = sessionStorage.getItem('credentials');
+    const credentials = localStorage.getItem('credentials');
     const { email, idToken, accessToken, sessionToken } = JSON.parse(credentials);;
     console.log(credentials, idToken, email);
     return {

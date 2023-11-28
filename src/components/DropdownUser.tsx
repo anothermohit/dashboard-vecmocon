@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 
 import UserOne from '../images/user/user-01.jpeg';
 
-const credentials = sessionStorage.getItem('credentials');
+const credentials = localStorage.getItem('credentials');
 const { email } = JSON.parse(credentials);
 
 const DropdownUser = () => {
@@ -40,8 +40,8 @@ const DropdownUser = () => {
 
   // Function to handle logout
   const handleLogout = () => {
-    // Clear credentials from sessionStorage
-    sessionStorage.removeItem('credentials');
+    // Clear credentials from localStorage
+    localStorage.removeItem('credentials');
     window.location.reload();
     // Add additional logout logic if needed
   };

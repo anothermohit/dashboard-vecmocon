@@ -1,7 +1,7 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import Breadcrumb from '../components/Breadcrumb';
-import DeviceMap from '../components/DeviceMap.jsx';
+import DeviceMap2 from '../components/DeviceMap2.jsx';
 import AWSData from '../aws.data.jsx';
 //import MqttConnection from '../MqttConnection.tsx';
 //import MqttSubscription from '../MqttSubscription.tsx';
@@ -19,9 +19,7 @@ const Map = (props) => {
 
   return (
     <div style={{paddingTop: 20, paddingBottom: 20}}>
-      <AWSData /> {/* clientInfo as dataItems */}
-      {dataItems.length ? <MQTT311 dataItems={dataItems} /> : null} {/* real-time state of every device in devices */}
-      <DeviceMap devices={devices} /> {/* passing real-time state of all devices */}
+      <DeviceMap2 devices={devices} /> {/* passing real-time state of all devices */}
     </div>
   );
 };
