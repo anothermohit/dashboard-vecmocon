@@ -34,7 +34,8 @@ const DeviceMap = () => {
 
   const handleSpeedFactorChange = () => {
     Swal.fire({
-      title: 'Set Speed Factor',
+      icon: 'warning',
+      title: 'Geofence boundary breached! Set Speed Factor',
       input: 'number',
       inputValue: speedFactor,
       showCancelButton: true,

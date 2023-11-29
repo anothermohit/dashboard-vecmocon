@@ -24,6 +24,7 @@ function getLoginCredentials() {
     const { email, idToken, accessToken, sessionToken } = JSON.parse(credentials);;
     console.log(credentials, idToken, email);
     return {
+        email,
         idToken,
         accessToken,
         sessionToken,
@@ -132,6 +133,8 @@ function Mqtt311(arg) {
     var test_topic = "/test/topic";
 
     async function PubSub(credentialsProvider: AWSCognitoCredentialsProvider) {
+        const { email } = getLoginCredentials();  // Extract email from the credentials
+
         connectionPromise = connect_websocket(credentialsProvider);
 
         connectionPromise.then((connection) => {
@@ -147,34 +150,36 @@ function Mqtt311(arg) {
 
                     dispatch(updateSeriesShadow(newData));
                 });
+            } else if (arg.dataItems && email == 'root@vecmocon.com') {
+                const wildcardTopic = "$aws/things/+/shadow/update";
+
+                connection.subscribe(wildcardTopic, mqtt.QoS.AtLeastOnce, (topic, payload) => {
+                    const decoder = new TextDecoder('utf8');
+                    let message = decoder.decode(new Uint8Array(payload));
+                    let state = JSON.parse(message).state;
+                    // Extract the deviceId from the subscribed topic
+                    const deviceId = topic.split("/")[2];
+                    console.log(deviceId, state);
+                    // Handle the state update for the specific device here
+                    // For example, dispatch an action to update the Redux store
+                    dispatch(updateDeviceState(deviceId, state));
+                });
             } else if (arg.dataItems) {
                 arg.dataItems.forEach((client) => {
                     client.deviceRegistered.forEach((deviceId) => {
+                        console.log(deviceId)
+
                         const topic = `$aws/things/${deviceId}/shadow/update`;
 
                         connection.subscribe(topic, mqtt.QoS.AtLeastOnce, (topic, payload) => {
                             const decoder = new TextDecoder('utf8');
                             let message = decoder.decode(new Uint8Array(payload));
                             let state = JSON.parse(message).state;
+                            console.log(state)
                             dispatch(updateDeviceState(deviceId, state));
                         });
                     });
                 });
-
-                /*
-                            const wildcardTopic = "$aws/things/+/shadow/update";
-
-            connection.subscribe(wildcardTopic, mqtt.QoS.AtLeastOnce, (topic, payload) => {
-                const decoder = new TextDecoder('utf8');
-                let message = decoder.decode(new Uint8Array(payload));
-                let state = JSON.parse(message).state;
-                // Extract the deviceId from the subscribed topic
-                const deviceId = topic.split("/")[3];
-                // Handle the state update for the specific device here
-                // For example, dispatch an action to update the Redux store
-                dispatch(updateDeviceState(deviceId, state));
-            });
-            */
             }
         }).catch((reason) => {
             console.log(`Error while connecting: ${reason}`);

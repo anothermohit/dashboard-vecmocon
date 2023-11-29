@@ -37,6 +37,7 @@ const AwsData = () => {
     const { email } = JSON.parse(credentials);
 
     console.log(email)
+    /*
   params = {
       TableName: 'clientInfo',
       Limit: 100
@@ -51,15 +52,15 @@ const AwsData = () => {
         dispatch(updateDataItems(data.Items)); // Update Redux store
       }
     });
+    */
 
-    /*
     params = {
       TableName: 'clientInfo',
       FilterExpression: 'contains(email, :email)', // Assuming 'emails' is the attribute name for the email array
       ExpressionAttributeValues: {
-        ':email': 'gurpal.singh@vecmocon.com',
+        ':email': email,
       },
-      Limit: 100,
+      Limit: 10000,
     };
     
     // Scan DynamoDB table
@@ -71,7 +72,6 @@ const AwsData = () => {
         dispatch(updateDataItems(data.Items)); // Update Redux store
       }
     });
-    */
   }, [dispatch]);
 
   return (
